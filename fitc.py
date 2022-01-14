@@ -548,7 +548,7 @@ class Controler(ControlerBase):
                         else:
                             out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
 
-                        np.savetxt(os.path.join(self.outputdir,"corrected_mean.txt"),out, header= citation+title, delimiter = "\t)
+                        np.savetxt(os.path.join(self.outputdir,"corrected_mean.txt"),out, header= citation+title, delimiter = "\t")
                         
                         #hdf =  h5py.File(os.path.join(self.outputdir,"corrected_covariance_inverse.h5"),"w")
                         #dataset = hdf.create_dataset("covariance_inverse", data = np.linalg.inv(self.mydatacorrection_cov))
