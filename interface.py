@@ -276,7 +276,7 @@ class InitParamWidget(QWidget):
         self.leftovervaluea_label = QLabel("Absolute value of         a")
         self.leftovera_limit_box = QLineEdit()
         self.leftovera_limit_box.setMaximumWidth(text_box_width-24)
-        self.leftovera_limit_box.setText("10e-3")
+        self.leftovera_limit_box.setText("10e-2")
         #self.leftovervaluec_label = QLabel(" c")
         #self.leftoverc_limit_box = QLineEdit()
         #self.leftoverc_limit_box.setMaximumWidth(text_box_width-24)  
@@ -416,8 +416,8 @@ class InitParamWidget(QWidget):
         
         sub_layoutv3.addLayout(self.hlayout9)
         #sub_layoutv2.addLayout(self.hlayout11)
-        sub_layoutv3.addLayout(self.hlayout12)
         sub_layoutv3.addLayout(self.hlayout13)
+        sub_layoutv3.addLayout(self.hlayout12)
         sub_layoutv3.addLayout(self.hlayout14)
         sub_layoutv3.addLayout(self.hlayout10)
 
@@ -1171,6 +1171,16 @@ class Graphs_optimisation(QGroupBox):
             ax2.set_xlabel("Trace index")
             ax2.set_ylabel('Coef a',color=color)
             
+            ax3.set_title('alpha- dilatation', fontsize=10)
+            ax4.set_title('beta - dilatation', fontsize=10)
+            
+            color = 'tab:red'
+            ax3.set_xlabel("Trace index")
+            ax3.set_ylabel('alpha',color=color)
+            
+            ax4.set_xlabel("Trace index")
+            ax4.set_ylabel('beta',color=color)
+            
             if not preview:
                 if delay_correction and len(delay_correction)>1:
                     ax1.plot(delay_correction, "b.-")
@@ -1180,37 +1190,19 @@ class Graphs_optimisation(QGroupBox):
                     ax2.plot([leftover_correction[i][0] for i in range(len(leftover_correction))], "b.-")
                     ax2.plot(ref_number, leftover_correction[ref_number][0], "rv")
                     ax2.annotate(" Reference", (ref_number,leftover_correction[ref_number][0]))
-                    
-                ax1.grid()
-                ax2.grid() 
-                
-        elif graph_option_2=='Correction parameters2':
-            self.figure.clf()
-            ax1 = self.figure.add_subplot(211)
-            ax2 = self.figure.add_subplot(212)
-
-            ax1.set_title('alpha- dilatation', fontsize=10)
-            ax2.set_title('beta - dilatation', fontsize=10)
-            
-            color = 'tab:red'
-            ax1.set_xlabel("Trace index")
-            ax1.set_ylabel('alpha',color=color)
-            
-            ax2.set_xlabel("Trace index")
-            ax2.set_ylabel('beta',color=color)
-            
-            if not preview:
                 if dilatation_correction and len(dilatation_correction)>1:
-                    ax1.plot([dilatation_correction[i][0] for i in range(len(dilatation_correction))], "b.-")
-                    ax1.plot(ref_number, dilatation_correction[ref_number][0], "rv")
-                    ax1.annotate(" Reference", (ref_number,dilatation_correction[ref_number][0]))
+                    ax3.plot([dilatation_correction[i][0] for i in range(len(dilatation_correction))], "b.-")
+                    ax3.plot(ref_number, dilatation_correction[ref_number][0], "rv")
+                    ax3.annotate(" Reference", (ref_number,dilatation_correction[ref_number][0]))
                     
-                    ax2.plot([dilatation_correction[i][1] for i in range(len(dilatation_correction))], "b.-")
-                    ax2.plot(ref_number, dilatation_correction[ref_number][1], "rv")
-                    ax2.annotate(" Reference", (ref_number,dilatation_correction[ref_number][1]))
+                    ax4.plot([dilatation_correction[i][1] for i in range(len(dilatation_correction))], "b.-")
+                    ax4.plot(ref_number, dilatation_correction[ref_number][1], "rv")
+                    ax4.annotate(" Reference", (ref_number,dilatation_correction[ref_number][1]))
                     
                 ax1.grid()
                 ax2.grid() 
+                ax3.grid()
+                ax4.grid()
                 
         elif graph_option_2=='Errors':
             self.figure.clf()
