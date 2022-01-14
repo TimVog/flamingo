@@ -192,7 +192,7 @@ class Controler(ControlerBase):
             self.myglobalparameters.t=np.arange(nsampleZP)*self.dt  # 0001 #
             self.myglobalparameters.freq = np.fft.rfftfreq(self.nsamplenotreal, self.dt)
             self.myglobalparameters.w = 2*np.pi*self.myglobalparameters.freq
-            #self.data.time = self.myglobalparameters.t*1e12 #on met à jour le time, pas vraiment nessessair emais on sait jamais si va etre reutilise plus tard
+            #self.data.time = self.myglobalparameters.t*1e12 #on met Ã  jour le time, pas vraiment nessessair emais on sait jamais si va etre reutilise plus tard
 
         else:
             self.nsamplenotreal = self.nsample 
@@ -241,7 +241,7 @@ class Controler(ControlerBase):
                 
             if self.set_to_zeros:
                 #Remplace la fin du pulse d'input par des 0 (de la longueur du decalage entre les 2 pulses)
-                #on veut coller le input à la ref
+                #on veut coller le input Ã  la ref
                 imax1 = np.argmax(myinputdata.pulse)
                 imax2 = np.argmax(self.myreferencedata.Pulseinit)
                 tmax1 = self.myglobalparameters.t[imax1]
@@ -538,6 +538,7 @@ class Controler(ControlerBase):
       
         citation= "Please cite this paper in any communication about any use of Correct@TDS : \n Coming soon..."
         title = "\n timeaxis \t E-field"
+  
         try:
             if self.initialised: 
                     if self.optim_succeed:
@@ -546,6 +547,7 @@ class Controler(ControlerBase):
                             print("here")
                         else:
                             out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
+
                         np.savetxt(os.path.join(self.outputdir,"corrected_mean.txt"),out, header= citation+title, delimiter = "\t)
                         
                         #hdf =  h5py.File(os.path.join(self.outputdir,"corrected_covariance_inverse.h5"),"w")

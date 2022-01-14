@@ -1204,34 +1204,6 @@ class Graphs_optimisation(QGroupBox):
                 ax3.grid()
                 ax4.grid()
                 
-        elif graph_option_2=='Correction parameters2':
-            self.figure.clf()
-            ax1 = self.figure.add_subplot(211)
-            ax2 = self.figure.add_subplot(212)
-
-            ax1.set_title('alpha- dilatation', fontsize=10)
-            ax2.set_title('beta - dilatation', fontsize=10)
-            
-            color = 'tab:red'
-            ax1.set_xlabel("Trace index")
-            ax1.set_ylabel('alpha',color=color)
-            
-            ax2.set_xlabel("Trace index")
-            ax2.set_ylabel('beta',color=color)
-            
-            if not preview:
-                if dilatation_correction and len(dilatation_correction)>1:
-                    ax1.plot([dilatation_correction[i][0] for i in range(len(dilatation_correction))], "b.-")
-                    ax1.plot(ref_number, dilatation_correction[ref_number][0], "rv")
-                    ax1.annotate(" Reference", (ref_number,dilatation_correction[ref_number][0]))
-                    
-                    ax2.plot([dilatation_correction[i][1] for i in range(len(dilatation_correction))], "b.-")
-                    ax2.plot(ref_number, dilatation_correction[ref_number][1], "rv")
-                    ax2.annotate(" Reference", (ref_number,dilatation_correction[ref_number][1]))
-                    
-                ax1.grid()
-                ax2.grid() 
-                
         elif graph_option_2=='Errors':
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
