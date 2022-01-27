@@ -561,7 +561,7 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
         # =============================================================================
         
         if myrank == 0:
-            xopt = xopt*(maxval-minval)+minval
+            xopt = xopt*(maxval-minval)+minval  #denormalize
             print('The best error was: \t{}'.format(fopt))
             if(fit_leftover_noise):
                 print('the best parameters were: \t{}\n'.format(xopt[:-1]))

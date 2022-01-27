@@ -88,8 +88,8 @@ class Controler(ControlerBase):
         self.errorIndex=0
         
         ## parameters for the optimization algorithm
-        self.swarmsize=1000
-        self.maxiter=20
+        self.swarmsize=1
+        self.maxiter=1
 
         # Variables for existence of temp Files
         self.is_temp_file_3 = 0 # temp file storing optimization results
@@ -130,6 +130,11 @@ class Controler(ControlerBase):
         self.fopt = []
         self.fopt_init = []
         
+        self.trace_start = 0
+        self.trace_end = -1
+        self.time_start = 0
+        self.time_end = -1
+        
 # =============================================================================
 # Initialisation tab
 # =============================================================================
@@ -143,8 +148,8 @@ class Controler(ControlerBase):
     def loading_text(self):
         self.refreshAll("\n Processing... \n")
 
-    def choices_ini(self, path_data, path_data_ref, Lfiltering_index, 
-                    Hfiltering_index, zeros_index, dark_index, cutstart, cutend,sharpcut, slope, intercept,modesuper):
+    def choices_ini(self, path_data, path_data_ref, trace_start, trace_end, time_start, time_end,
+                    Lfiltering_index, Hfiltering_index, zeros_index, dark_index, cutstart, cutend,sharpcut, slope, intercept,modesuper):
         """Process all the informations given in the first panel of initialisation: 
             create instances of classes to store data, apply filters"""
 
@@ -163,15 +168,26 @@ class Controler(ControlerBase):
         self.dilatation_correction = []
         self.fopt = []
         self.fopt_init = []
+        
+        self.trace_start = trace_start
+        self.trace_end = trace_end
+        self.time_start = time_start
+        self.time_end = time_end
+        
+        with h5py.File(path_data, "r") as f:
+            l = len(f)-1
+            if trace_start >= l or (trace_end!=-1 and trace_end >= l):
+                self.refreshAll3("Invalid length, the file contains "+str(l)+" traces")
             
-        self.data= TDS.inputdatafromfile(path_data)    ## We load the signal of the measured pulse with sample
+        
+        self.data= TDS.inputdatafromfile(path_data, self.trace_start,self.trace_end, self.time_start, self.time_end)    ## We load the signal of the measured pulse with sample
         #self.myinput_cov = TDS.torch_cov(self.data.Pulseinit, rowvar=False)
         #print(np.shape(self.myinput_cov))
         if path_data_ref:
-            self.data_without_sample= TDS.inputdatafromfile(path_data_ref, sample = 0)    ## We load the signal of the measured pulse with sample
+            self.data_without_sample= TDS.inputdatafromfile(path_data_ref, self.trace_start,self.trace_end, self.time_start, self.time_end, sample = 0)    ## We load the signal of the measured pulse with sample
 
         self.reference_number = self.data.ref_number
-        self.myreferencedata = TDS.getreferencetrace(path_data, self.reference_number)
+        self.myreferencedata = TDS.getreferencetrace(path_data, self.reference_number, self.trace_start, self.time_start)
 
         self.myglobalparameters.t = self.data.time*1e-12 # this assumes input files are in ps ## We load the list with the time of the experiment
         self.nsample = len(self.myglobalparameters.t)
@@ -192,7 +208,7 @@ class Controler(ControlerBase):
             self.myglobalparameters.t=np.arange(nsampleZP)*self.dt  # 0001 #
             self.myglobalparameters.freq = np.fft.rfftfreq(self.nsamplenotreal, self.dt)
             self.myglobalparameters.w = 2*np.pi*self.myglobalparameters.freq
-            #self.data.time = self.myglobalparameters.t*1e12 #on met Ã  jour le time, pas vraiment nessessair emais on sait jamais si va etre reutilise plus tard
+            #self.data.time = self.myglobalparameters.t*1e12 #on met Ã  jour le time, pas vraiment nessessair emais on sait jamais si va etre reutilise plus tard
 
         else:
             self.nsamplenotreal = self.nsample 
@@ -241,7 +257,7 @@ class Controler(ControlerBase):
                 
             if self.set_to_zeros:
                 #Remplace la fin du pulse d'input par des 0 (de la longueur du decalage entre les 2 pulses)
-                #on veut coller le input Ã  la ref
+                #on veut coller le input Ã  la ref
                 imax1 = np.argmax(myinputdata.pulse)
                 imax2 = np.argmax(self.myreferencedata.Pulseinit)
                 tmax1 = self.myglobalparameters.t[imax1]
@@ -534,7 +550,11 @@ class Controler(ControlerBase):
             print('Output : \n {0} \n Error : \n {1} \n'.format(output, error))
             return(0)
         
-    def save_data(self, save_all):
+    def save_data(self, filename, path, file):
+        #file = 0 mean
+        #file = 1 params
+        #2 each traces
+        #3 covariance
       
         citation= "Please cite this paper in any communication about any use of Correct@TDS : \n Coming soon..."
         title = "\n timeaxis \t E-field"
@@ -542,51 +562,53 @@ class Controler(ControlerBase):
         try:
             if self.initialised: 
                     if self.optim_succeed:
-                        if self.mode == "superresolution":
-                            out = np.column_stack((self.data.time, np.mean(self.mydatacorrection.pulse, axis = 0)[:self.nsample]))
-                            print("here")
-                        else:
-                            out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
-
-                        np.savetxt(os.path.join(self.outputdir,"corrected_mean.txt"),out, header= citation+title, delimiter = "\t")
+                        if file == 0:
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.data.time, np.mean(self.mydatacorrection.pulse, axis = 0)[:self.nsample]))
+                                print("here")
+                            else:
+                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
+    
+                            np.savetxt(os.path.join(path,filename),out, header= citation+title, delimiter = "\t")
                         
-                        #hdf =  h5py.File(os.path.join(self.outputdir,"corrected_covariance_inverse.h5"),"w")
+                        #hdf =  h5py.File(os.path.join(path,filename.h5"),"w")
                         #dataset = hdf.create_dataset("covariance_inverse", data = np.linalg.inv(self.mydatacorrection_cov))
                         #dataset.attrs["CITATION"] = citation
                         
-                        to_save = []
-                        if self.fit_delay:
-                            to_save.append(self.delay_correction)
-                        else:
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-                            
-                        if self.fit_dilatation:
-                            to_save.append([self.dilatation_correction[i][0] for i in range(self.data.numberOfTrace)])
-                            to_save.append([self.dilatation_correction[i][1] for i in range(self.data.numberOfTrace)])
-                        else:
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-
-                            
-                        if self.fit_leftover_noise:
-                            to_save.append([self.leftover_correction[i][0] for i in range(self.data.numberOfTrace)])
-                        else:
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-                            
-                        if self.fit_periodic_sampling:
-                            to_save.append([self.periodic_correction[0][0]]*self.data.numberOfTrace)  
-                            to_save.append([self.periodic_correction[0][1]]*self.data.numberOfTrace)  
-                            to_save.append([self.periodic_correction[0][2]]*self.data.numberOfTrace)  
-                        else:
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-                            to_save.append([0]*self.data.numberOfTrace) #empty
-
-                        np.savetxt(os.path.join(self.outputdir,"correction_parameters.txt"), np.transpose(to_save), delimiter = "\t", header=citation+"\n delay \t alpha_dilatation \t beta_dilatation \t a_amplitude \t A \t nu \t phi")
+                        if file == 1:
+                            to_save = []
+                            if self.fit_delay:
+                                to_save.append(self.delay_correction)
+                            else:
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+                                
+                            if self.fit_dilatation:
+                                to_save.append([self.dilatation_correction[i][0] for i in range(self.data.numberOfTrace)])
+                                to_save.append([self.dilatation_correction[i][1] for i in range(self.data.numberOfTrace)])
+                            else:
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+    
+                                
+                            if self.fit_leftover_noise:
+                                to_save.append([self.leftover_correction[i][0] for i in range(self.data.numberOfTrace)])
+                            else:
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+                                
+                            if self.fit_periodic_sampling:
+                                to_save.append([self.periodic_correction[0][0]]*self.data.numberOfTrace)  
+                                to_save.append([self.periodic_correction[0][1]]*self.data.numberOfTrace)  
+                                to_save.append([self.periodic_correction[0][2]]*self.data.numberOfTrace)  
+                            else:
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+                                to_save.append([0]*self.data.numberOfTrace) #empty
+    
+                            np.savetxt(os.path.join(path,filename), np.transpose(to_save), delimiter = "\t", header=citation+"\n delay \t alpha_dilatation \t beta_dilatation \t a_amplitude \t A \t nu \t phi")
                 
-                        if save_all:
+                        if file == 2:
                             #save in hdf5
-                            hdf =  h5py.File(os.path.join(self.outputdir,"corrected_traces.h5"),"w")
+                            hdf =  h5py.File(os.path.join(path,filename),"w")
                             dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0])
                             dataset.attrs["CITATION"] = citation
                             if self.mode == "superresolution":
@@ -603,19 +625,20 @@ class Controler(ControlerBase):
                                 count+=1
                             hdf.close()
                     else:
-                        if self.mode == "superresolution":
-                            out = np.column_stack((self.data.time, np.mean(self.myinput.pulse, axis = 0)[:self.nsample]))
-                        else:
-                            out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.myinput.pulse, axis = 0)))
-                        np.savetxt(os.path.join(self.outputdir,"mean.txt"),out, delimiter = "\t", header= citation+title)
+                        if file == 0:
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.data.time, np.mean(self.myinput.pulse, axis = 0)[:self.nsample]))
+                            else:
+                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.myinput.pulse, axis = 0)))
+                            np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+title)
                         
-                        #hdf =  h5py.File(os.path.join(self.outputdir,"covariance_inverse.h5"),"w")
+                        #hdf =  h5py.File(os.path.join(path,filename),"w")
                         #dataset = hdf.create_dataset("covariance_inverse", data = np.linalg.inv(self.myinput_cov))
                         #dataset.attrs["CITATION"] = citation
                         
-                        if save_all:
+                        if file == 2:
                             #save in hdf5
-                            hdf =  h5py.File(os.path.join(self.outputdir,"traces.h5"),"w")
+                            hdf =  h5py.File(os.path.join(path,filename),"w")
                             dataset = hdf.create_dataset(str("0"), data = self.myinput.pulse[0])
                             dataset.attrs["CITATION"] = citation
                             if self.mode == "superresolution":
@@ -649,7 +672,7 @@ class Controler(ControlerBase):
         self.refreshAll3(message)
 
     def error_message_path3(self):
-        self.refreshAll3("Error: Please enter a valid file(s).")
+        self.refreshAll3("Please enter a valid file(s). This file is maybe empty")
 
     def error_message_output_paths(self):
         self.refreshAll3("Invalid output paths.")

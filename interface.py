@@ -13,6 +13,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
+from PyQt5 import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -155,6 +156,10 @@ class InitParamWidget(QWidget):
         self.path_data = None
         self.path_data_ref = None
         
+        self.dialog = QDialog()
+        self.dialog.ui = Ui_Dialog()
+        self.dialog.ui.setupUi(self.dialog, controler)
+        
         label_width=1500
         text_box_width=150
         text_box_height=25
@@ -172,6 +177,7 @@ class InitParamWidget(QWidget):
         self.button_ask_path_data.resize(self.button_ask_path_data.sizeHint())
         self.button_ask_path_data.clicked.connect(self.get_path_data)
         
+        
         self.label_path_without_sample = QLabel('Select traces without sample (optional) \u00b2')
         self.label_path_without_sample.setAlignment(Qt.AlignVCenter)
         self.label_path_without_sample.resize(200, 100)
@@ -183,6 +189,18 @@ class InitParamWidget(QWidget):
         self.button_ask_path_without_sample.resize(200, 100)
         self.button_ask_path_without_sample.resize(self.button_ask_path_without_sample.sizeHint())
         self.button_ask_path_without_sample.clicked.connect(self.get_path_data_ref)
+        
+        
+        self.label_data_length = QLabel('Set part of data to analyze? (optional)')
+        self.label_data_length.setAlignment(Qt.AlignVCenter)
+        self.label_data_length.resize(200, 100)
+        self.label_data_length.resize(self.label_path_data.sizeHint())
+        self.label_data_length.setMaximumHeight(30)
+        
+        self.button_ask_data_length = QPushButton('set') #unset after
+        self.button_ask_data_length.resize(200, 100)
+        self.button_ask_data_length.resize(self.button_ask_path_data.sizeHint())
+        self.button_ask_data_length.clicked.connect(self.open_dialog)
         
         self.button_preview = QPushButton('Preview')
         self.button_preview.resize(200, 100)
@@ -335,11 +353,13 @@ class InitParamWidget(QWidget):
         
         self.hlayout6.addWidget(self.label_path_data,20)
         self.hlayout6.addWidget(self.button_ask_path_data,17)
-        #self.hlayout6.addWidget(self.button_preview,17)
 
 
         self.hlayout7.addWidget(self.label_path_without_sample,20)
         self.hlayout7.addWidget(self.button_ask_path_without_sample,17)
+        
+        self.hlayout11.addWidget(self.label_data_length,20)
+        self.hlayout11.addWidget(self.button_ask_data_length,17)
         
         self.hlayout8.addWidget(self.button_data)
         #self.hlayout8.addWidget(self.options_super,1)
@@ -410,12 +430,12 @@ class InitParamWidget(QWidget):
         
         sub_layoutv2 = QVBoxLayout()
         sub_layoutv3 = QVBoxLayout()
+        
         sub_layoutv2.addLayout(self.hlayout6)
         sub_layoutv2.addLayout(self.hlayout7)
-        #sub_layoutv2.addLayout(self.hlayout8)
+        sub_layoutv2.addLayout(self.hlayout11)
         
         sub_layoutv3.addLayout(self.hlayout9)
-        #sub_layoutv2.addLayout(self.hlayout11)
         sub_layoutv3.addLayout(self.hlayout13)
         sub_layoutv3.addLayout(self.hlayout12)
         sub_layoutv3.addLayout(self.hlayout14)
@@ -486,6 +506,9 @@ class InitParamWidget(QWidget):
 
     def pressed_loading1(self):
         self.controler.loading_text()
+        
+    def open_dialog(self):
+        self.dialog.exec_()
 
     def on_click(self):
         global graph_option_2, preview
@@ -503,9 +526,22 @@ class InitParamWidget(QWidget):
                 modesuper = self.options_super.currentIndex()
             slope = float(self.slope_box.text())
             intercept = float(self.intercept_box.text())
+            
+            trace_start = 0
+            trace_end = -1
+            time_start = 0
+            time_end = -1
+            self.button_ask_data_length.setText("set")
+            
+            if self.dialog.ui.length_initialized:
+                trace_start = self.dialog.ui.trace_start
+                trace_end = self.dialog.ui.trace_end
+                time_start = self.dialog.ui.time_start
+                time_end = self.dialog.ui.time_end
+                self.button_ask_data_length.setText(str(trace_start)+"-"+str(trace_end))
 
             try:
-                self.controler.choices_ini(self.path_data, self.path_data_ref,
+                self.controler.choices_ini(self.path_data, self.path_data_ref, trace_start, trace_end, time_start, time_end,
                                                Lfiltering_index, Hfiltering_index, zeros_index, dark_index, cutstart, 
                                                cutend, cutsharp, slope, intercept, modesuper)
                 graph_option_2='Pulse (E_field)'
@@ -516,7 +552,8 @@ class InitParamWidget(QWidget):
                 print(e)
                 self.controler.error_message_path3()
                 return(0)
-        except:
+        except Exception as e:
+            print(e)
             self.controler.refreshAll3("Invalid parameters, please enter real values only")
         self.controler.initialised=1
         self.controler.optim_succeed = 0
@@ -624,6 +661,95 @@ class InitParamWidget(QWidget):
         deleteLayout(self.action_widget.layout())
         self.action_widget.refresh()
         self.controler.refreshAll3('')
+        
+
+class Ui_Dialog(object):
+    def setupUi(self, Dialog, controler):
+        self.controler = controler
+        
+        self.length_initialized = 0
+        self.trace_start = 0
+        self.trace_end = -1
+        self.time_start = 0
+        self.time_end = -1
+        
+        self.dialog = Dialog
+        self.dialog.resize(400, 126)
+        self.dialog.setWindowTitle("Set length of data to analyze (optional)")
+        
+        self.label_data_length = QLabel('Number of time traces (0,...,N-1)   ')
+        
+        self.label_data_length_start = QLabel('  start    ')
+        self.length_start_limit_box = QLineEdit()
+        
+        self.label_data_length_end = QLabel('    end      ')
+        self.length_end_limit_box = QLineEdit()
+        
+        self.label_time_length = QLabel('Length of time trace (optional)   ')
+        
+        self.label_time_length_start = QLabel('start (ps)')
+        self.time_start_limit_box = QLineEdit()
+        
+        self.label_time_length_end = QLabel('end (ps)')
+        self.time_end_limit_box = QLineEdit()
+        
+        self.button_submit_length = QPushButton('Submit')
+        self.button_submit_length.clicked.connect(self.action)
+        #self.button.clicked.connect(self.on_click)
+        
+        self.hlayout0=QHBoxLayout()
+        self.hlayout1=QHBoxLayout()
+        self.hlayout2=QHBoxLayout()
+        
+        self.hlayout0.addWidget(self.label_data_length,1)
+        self.hlayout0.addWidget(self.label_data_length_start,1)
+        self.hlayout0.addWidget(self.length_start_limit_box,1)
+        self.hlayout0.addWidget(self.label_data_length_end,1)
+        self.hlayout0.addWidget(self.length_end_limit_box,0)
+        self.hlayout1.addWidget(self.label_time_length,1)
+        self.hlayout1.addWidget(self.label_time_length_start,1)
+        self.hlayout1.addWidget(self.time_start_limit_box,0)
+        self.hlayout1.addWidget(self.label_time_length_end,1)
+        self.hlayout1.addWidget(self.time_end_limit_box,1)
+        self.hlayout2.addWidget(self.button_submit_length)
+        
+        self.sub_layoutv10 = QVBoxLayout(self.dialog)
+        self.sub_layoutv10.addLayout(self.hlayout0)
+        self.sub_layoutv10.addLayout(self.hlayout1)
+        self.sub_layoutv10.addLayout(self.hlayout2)
+  
+    def action(self):
+  
+        self.length_initialized = 0
+        try:
+            if self.length_start_limit_box.text() or self.length_end_limit_box.text():
+                trace_start = int(self.length_start_limit_box.text())
+                trace_end = int(self.length_end_limit_box.text())
+
+                if trace_start  < 0 or trace_start > trace_end:
+                    raise ValueError
+                else:
+                    self.trace_start = trace_start
+                   
+                if trace_end  < 0:
+                        raise ValueError
+                else:
+                    self.trace_end = trace_end
+                    
+                self.length_initialized = 1
+                
+                    
+            if self.time_start_limit_box.text() or self.time_end_limit_box.text():
+                time_start = float(self.time_start_limit_box.text())
+                time_end = float(self.time_end_limit_box.text())
+                #TODO
+                #conditions for time
+            
+            self.dialog.close()
+        except Exception as e:
+            print(e)
+            self.controler.refreshAll3("Invalid values, please enter positive values and trace start number must be less than or equal to trace end")
+            return(0)
 
 class TextBoxWidget(QTextEdit):
     def __init__(self, parent, controler):
@@ -636,7 +762,7 @@ class TextBoxWidget(QTextEdit):
         self.setMinimumWidth(560)
         
         references = ['\u00b9 Time should be in ps.\nDatasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\nExample: if we have 1000 time traces, N-1 = 999',
-                      '\u00b2 Use to take into account the reference traces in the covariance computation \n(only if the initial data are measures with a sample)',
+                      '\u00b2 Use to take into account the reference traces in the covariance computation \n(only if the initial data are measures with a sample)\ndon\'t forget to apply the same filters/correction to the reference before',
                       '\u00b3 Use a linear function (or custom function) to remove the contribution of the dark noise after 200GHz.',
                       '\u2074 Sharpness: 100 is almost a step function, 0.1 is really smooth. See graphs in optimization tab.'
                       
@@ -904,56 +1030,122 @@ class Saving_parameters(QGroupBox):
 
         
         # Widget to see output directory
-        self.label_outputdir = QLabel('Output directory: ')
+        #self.label_outputdir = QLabel('Output directory: ')
         #self.label_outputdir.setMaximumWidth(label_width)
-        self.button_outputdir = QPushButton('browse', self)
-        self.button_outputdir.clicked.connect(self.get_outputdir)
+        self.button_save_mean = QPushButton('Mean (.txt)', self)
+        self.button_save_mean.clicked.connect(self.save_mean)
        # self.button_outputdir.setMaximumWidth(action_widget_width +
                                         #   corrective_width_factor)
         #self.button_outputdir.setMaximumHeight(30)    
         
-        self.label_save = QLabel('Save each traces?')
-        self.save_choice = QComboBox()
-        self.save_choice.addItems(['No','Yes'])
-        
-        self.save_button = QPushButton("Save")
-        self.save_button.clicked.connect(self.save_data)
-        self.save_button.pressed.connect(self.pressed_loading)
 
+        self.button_save_traces = QPushButton('Each traces (.h5)', self)
+        self.button_save_traces.clicked.connect(self.save_traces)
+        
+        self.button_save_param = QPushButton('Correction parameters (.txt)', self)
+        self.button_save_param.clicked.connect(self.save_param)
+        
+        self.button_save_cov = QPushButton('Covariance inverse (.h5)', self)
+        self.button_save_cov.clicked.connect(self.save_cov)
         
         sub_layout_h1=QHBoxLayout()
         sub_layout_h2=QHBoxLayout()
         sub_layout_h3=QHBoxLayout()            
 
-        sub_layout_h3.addWidget(self.label_outputdir,0)
-        sub_layout_h3.addWidget(self.button_outputdir,0)
-        sub_layout_h3.addWidget(self.label_save,0)
-        sub_layout_h3.addWidget(self.save_choice,0)
-        sub_layout_h2.addWidget(self.save_button,0)
+        sub_layout_h3.addWidget(self.button_save_mean,0)
+        sub_layout_h3.addWidget(self.button_save_traces,0)
+        sub_layout_h2.addWidget(self.button_save_param,0)
+        sub_layout_h2.addWidget(self.button_save_cov,0)
         
         self.main_layout=QVBoxLayout()
         self.main_layout.addLayout(sub_layout_h3)
         self.main_layout.addLayout(sub_layout_h2)
         
         self.setLayout(self.main_layout)
+        
+    def save_cov(self):
+        self.controler.refreshAll3(" Not yet implemented")
     
-    def save_data(self):
+    def save_mean(self):
         global preview
-        try:
-            self.controler.get_output_paths(self.outputdir)
-        except:
-            self.controler.error_message_output_paths()
-            return(0)
-        try:
-            saved = self.controler.save_data(self.save_choice.currentIndex())
-            if saved:
-                if not self.controler.optim_succeed:
-                    preview = 1
-                self.controler.refreshAll3("Done")
-            else:
-                print("Something went wrong")
-        except:
-            print("Unknown error")
+        if self.controler.initialised:
+            try:
+                options = QFileDialog.Options()
+                options |= QFileDialog.DontUseNativeDialog
+                fileName, _ = QFileDialog.getSaveFileName(self,"Mean file","mean.txt","TXT (*.txt)", options=options)
+                try:
+                    name=os.path.basename(fileName)
+                    path = os.path.dirname(fileName)
+                    if name:
+                        saved = self.controler.save_data(name, path, 0)
+                        if saved:
+                            if not self.controler.optim_succeed:
+                                preview = 1
+                            self.controler.refreshAll3(" Saving mean - Done")
+                        else:
+                            print("Something went wrong")          
+                except:
+                    self.controler.error_message_output_filename()
+            except:
+                self.controler.error_message_output_filename()
+                return(0)
+        else:
+            self.controler.refreshAll3("Please enter initialization data first")
+            
+    def save_param(self):
+        global preview
+        if self.controler.optim_succeed:
+            try:
+                options = QFileDialog.Options()
+                options |= QFileDialog.DontUseNativeDialog
+                fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","corection_parameters.txt","TXT (*.txt)", options=options)
+                try:
+                    name=os.path.basename(fileName)
+                    path = os.path.dirname(fileName)
+                    if name:
+                        saved = self.controler.save_data(name, path, 1)
+                        if saved:
+                            if not self.controler.optim_succeed:
+                                preview = 1
+                            self.controler.refreshAll3(" Saving parameters - Done")
+                        else:
+                            print("Something went wrong")          
+                except:
+                    self.controler.error_message_output_filename()
+            except:
+                self.controler.error_message_output_filename()
+                return(0)
+        else:
+            self.controler.refreshAll3("Please launch an optimization first")
+        
+    def save_traces(self):
+        global preview
+        if self.controler.initialised:
+            try:
+                options = QFileDialog.Options()
+                options |= QFileDialog.DontUseNativeDialog
+                fileName, _ = QFileDialog.getSaveFileName(self,"Each traces filename","traces.h5","HDF5 (*.h5)", options=options)
+                try:
+                    name=os.path.basename(fileName)
+                    path = os.path.dirname(fileName)
+                    if name:
+                        saved = self.controler.save_data(name, path, 2)
+                        if saved:
+                            if not self.controler.optim_succeed:
+                                preview = 1
+                            self.controler.refreshAll3(" Saving each traces - Done")
+                        else:
+                            print("Something went wrong")          
+                except:
+                    self.controler.error_message_output_filename()
+            except:
+                self.controler.error_message_output_filename()
+                return(0)
+        else:
+            self.controler.refreshAll3("Please enter initialization data first")
+            
+
+        
             
     def refresh():
         pass
@@ -973,9 +1165,6 @@ class Saving_parameters(QGroupBox):
         except:
             self.controler.error_message_path3()        
                 
-
-
-
 
 class Graphs_optimisation(QGroupBox):
     def __init__(self, parent, controler):

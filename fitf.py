@@ -53,12 +53,16 @@ class globalparameters:
 # =============================================================================
 
 class inputdatafromfile: 
-    def __init__(self, path, sample = 1):
+    def __init__(self, path, trace_start, trace_end, time_start, time_end, sample = 1):
         with h5py.File(path, "r") as f:
             self.time = np.array(f["timeaxis"])
-            self.numberOfTrace = len(f)-1 # on enleve timeaxis
-            
-            self.Pulseinit = [np.array(f[str(trace)]) for trace in range(self.numberOfTrace)] #list of all time trace without the ref, traces are ordered
+            if trace_end == -1:
+                self.numberOfTrace = len(f)-1 # on enleve timeaxis
+                trace_end = len(f)-2
+            else:
+                self.numberOfTrace = trace_end-trace_start+1
+
+            self.Pulseinit = [np.array(f[str(trace)]) for trace in range(trace_start, trace_end+1)] #list of all time trace without the ref, traces are ordered
             if sample:
                 self.ref_number = self.choose_ref_number()
             else:
@@ -80,9 +84,9 @@ class inputdatafromfile:
     
 
 class getreferencetrace:
-    def __init__(self, path, ref_number):
+    def __init__(self, path, ref_number, trace_start, time_start):
         with h5py.File(path, "r") as f:
-            self.Pulseinit = np.array(f[str(ref_number)])
+            self.Pulseinit = np.array(f[str(trace_start+ref_number)])
             self.Spulseinit = torch_rfft(self.Pulseinit)  ## We compute the spectrum of the measured pulse
             
     def transferfunction(self, myinputdata):
