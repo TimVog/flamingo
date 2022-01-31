@@ -67,6 +67,11 @@ class inputdatafromfile:
                 self.ref_number = self.choose_ref_number()
             else:
                 self.ref_number = None
+            self.timestamp = None
+            try:
+                self.timestamp = [f[str(trace)].attrs["TIMESTAMP"] for trace in range(trace_start, trace_end+1) ]
+            except:
+                pass
             
     def choose_ref_number(self):
         norm = []

@@ -547,7 +547,7 @@ class InitParamWidget(QWidget):
                 graph_option_2='Pulse (E_field)'
                 preview = 1
                 self.graph_widget.refresh()
-                self.controler.refreshAll3(" Data initialization done")
+                self.controler.refreshAll3(" Data initialization done | "+str(self.controler.data.numberOfTrace)+ " time traces loaded between ["+ str(int(self.controler.data.time[0])) + " , " + str(int(self.controler.data.time[-1]))+ "] ps")
             except Exception as e:
                 print(e)
                 self.controler.error_message_path3()
@@ -1265,12 +1265,14 @@ class Graphs_optimisation(QGroupBox):
         #self.hlayout.addWidget(self.button_Correction_param2)
         #self.hlayout.addWidget(self.button_Errors)
         #self.hlayout.addWidget(self.button_Cov_Pulse_E_field)
-        
-        self.hlayout3.addWidget(self.label_window,0)
-        window_group = QGroupBox()
-        window_group.setLayout(self.hlayout3)
-        window_group.setMaximumWidth(100)
-        window_group.setMaximumHeight(60)
+        self.label_window.setMaximumHeight(30)
+        self.toolbar.setMaximumHeight(30)
+        self.hlayout3.addWidget(self.toolbar)
+        self.hlayout3.addWidget(self.label_window)
+        #window_group = QGroupBox()
+        #window_group.setLayout(self.hlayout3)
+        #window_group.setMaximumWidth(100)
+        #window_group.setMaximumHeight(60)
 
 
         #self.hlayout.addWidget(self.button_Delay)
@@ -1283,7 +1285,8 @@ class Graphs_optimisation(QGroupBox):
         #self.hlayout.addWidget(self.button_Delay_by_index)
         #self.hlayout2.addWidget(self.button_CoefC)
 
-        self.vlayoutmain.addWidget(self.toolbar)
+        self.vlayoutmain.addLayout(self.hlayout3)
+        #self.vlayoutmain.addWidget(self.toolbar,1)
         #self.vlayoutmain.addWidget(window_group,Qt.AlignRight)
 
         self.vlayoutmain.addWidget(self.canvas)

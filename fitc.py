@@ -208,7 +208,6 @@ class Controler(ControlerBase):
             self.myglobalparameters.t=np.arange(nsampleZP)*self.dt  # 0001 #
             self.myglobalparameters.freq = np.fft.rfftfreq(self.nsamplenotreal, self.dt)
             self.myglobalparameters.w = 2*np.pi*self.myglobalparameters.freq
-            #self.data.time = self.myglobalparameters.t*1e12 #on met Ã  jour le time, pas vraiment nessessair emais on sait jamais si va etre reutilise plus tard
 
         else:
             self.nsamplenotreal = self.nsample 
@@ -558,7 +557,7 @@ class Controler(ControlerBase):
       
         citation= "Please cite this paper in any communication about any use of Correct@TDS : \n Coming soon..."
         title = "\n timeaxis \t E-field"
-  
+        custom = "\n Average over "+str(self.data.numberOfTrace)+" waveforms. Timestamp: "
         try:
             if self.initialised: 
                     if self.optim_succeed:
@@ -568,8 +567,12 @@ class Controler(ControlerBase):
                                 print("here")
                             else:
                                 out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
-    
-                            np.savetxt(os.path.join(path,filename),out, header= citation+title, delimiter = "\t")
+                            
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
+                            np.savetxt(os.path.join(path,filename),out, header= citation+custom+title, delimiter = "\t")
                         
                         #hdf =  h5py.File(os.path.join(path,filename.h5"),"w")
                         #dataset = hdf.create_dataset("covariance_inverse", data = np.linalg.inv(self.mydatacorrection_cov))
@@ -611,6 +614,8 @@ class Controler(ControlerBase):
                             hdf =  h5py.File(os.path.join(path,filename),"w")
                             dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0])
                             dataset.attrs["CITATION"] = citation
+                            if self.data.timestamp:
+                                dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
                             if self.mode == "superresolution":
                                 hdf.create_dataset('timeaxis', data = self.data.time)
                             else:
@@ -622,15 +627,21 @@ class Controler(ControlerBase):
                                 else:
                                     dataset = hdf.create_dataset(str(count), data = i)
                                 dataset.attrs["CITATION"] = citation
+                                if self.data.timestamp:
+                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
                                 count+=1
                             hdf.close()
                     else:
                         if file == 0:
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
                             if self.mode == "superresolution":
                                 out = np.column_stack((self.data.time, np.mean(self.myinput.pulse, axis = 0)[:self.nsample]))
                             else:
                                 out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.myinput.pulse, axis = 0)))
-                            np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+title)
+                            np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
                         
                         #hdf =  h5py.File(os.path.join(path,filename),"w")
                         #dataset = hdf.create_dataset("covariance_inverse", data = np.linalg.inv(self.myinput_cov))
@@ -641,6 +652,8 @@ class Controler(ControlerBase):
                             hdf =  h5py.File(os.path.join(path,filename),"w")
                             dataset = hdf.create_dataset(str("0"), data = self.myinput.pulse[0])
                             dataset.attrs["CITATION"] = citation
+                            if self.data.timestamp:
+                                dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
                             if self.mode == "superresolution":
                                 hdf.create_dataset('timeaxis', data = self.data.time)
                             else:
@@ -653,6 +666,8 @@ class Controler(ControlerBase):
                                 else:
                                     dataset = hdf.create_dataset(str(count), data = i)
                                 dataset.attrs["CITATION"] = citation
+                                if self.data.timestamp:
+                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
                                 count+=1
                             hdf.close()
                     return 1
