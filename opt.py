@@ -692,9 +692,8 @@ if fit_periodic_sampling:
     nu = periodic_sampling_freq_limit*1e12   # 1/s   Hz
     delta_nu = myglobalparameters.freq[-1]/(len(myglobalparameters.freq)-1) # Hz
     index_nu=int(nu/delta_nu)
-
     
-    maxval_ps = np.array([dt/10, 10*2*np.pi*1e12, np.pi])
+    maxval_ps = np.array([dt/100, 12*2*np.pi*1e12, np.pi])
     minval_ps = np.array([0, 6*2*np.pi*1e12, -np.pi])
     guess_ps = np.array([0,0,0])
     
@@ -712,9 +711,9 @@ if fit_periodic_sampling:
         
         error = sum(abs((TDS.torch_rfft(corrected)[index_nu:])))
         
-        """error = 0
-        for i in range(index_nu,len(myglobalparameters.freq)):
-            error += abs(np.real(np.exp(-j*np.angle(np.fft.rfft(corrected)[i-index_nu])) * np.fft.rfft(corrected)[i]))"""
+        #error = 0
+        #for i in range(index_nu,len(myglobalparameters.freq)):
+         #   error += abs(np.real(np.exp(-j*np.angle(np.fft.rfft(corrected)[i-index_nu])) * np.fft.rfft(corrected)[i]))
 
         return error
     
@@ -723,6 +722,7 @@ if fit_periodic_sampling:
     print('x0')
     print(x0_ps)
     res_ps = optimize.dual_annealing(error_periodic, x0 = x0_ps, maxiter = maxiter_ps, bounds=list(zip(lb_ps, ub_ps)))
+    #res_ps = optimize.minimize(error_periodic,x0_ps, method='SLSQP',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':maxiter_ps})
     #res_ps = optimize.minimize(error_periodic,x0_ps,method='L-BFGS-B',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':1000})
     #res_ps = pso(error_periodic,lb_ps,ub_ps,swarmsize=100,minfunc=1e-18,minstep=1e-8,debug=1,phip=0.5,phig=0.5,maxiter=100)
     
@@ -730,7 +730,10 @@ if fit_periodic_sampling:
     fopt_ps = res_ps.fun
     
     result_optimization = [xopt_ps, fopt_ps]
-    f=open(os.path.join("temp",'temp_file_3.bin'),'ab')
+    if fit_delay or fit_leftover_noise or fit_dilatation:
+    	f=open(os.path.join("temp",'temp_file_3.bin'),'ab')
+    else:
+    	f=open(os.path.join("temp",'temp_file_3.bin'),'wb')
     pickle.dump(result_optimization,f,pickle.HIGHEST_PROTOCOL)
     f.close()
     
