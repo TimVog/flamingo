@@ -256,7 +256,9 @@ class Controler(ControlerBase):
                 
             if self.set_to_zeros:
                 #Remplace la fin du pulse d'input par des 0 (de la longueur du decalage entre les 2 pulses)
-                #on veut coller le input a  la ref
+
+                #on veut coller le input et  la ref
+
                 imax1 = np.argmax(myinputdata.pulse)
                 imax2 = np.argmax(self.myreferencedata.Pulseinit)
                 tmax1 = self.myglobalparameters.t[imax1]
