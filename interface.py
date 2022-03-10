@@ -26,7 +26,7 @@ import time
 import fitf as TDS
 from fitc import Controler
 from scipy import signal
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 13})
 
 
 try:
@@ -1098,7 +1098,7 @@ class Saving_parameters(QGroupBox):
             try:
                 options = QFileDialog.Options()
                 options |= QFileDialog.DontUseNativeDialog
-                fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","corection_parameters.txt","TXT (*.txt)", options=options)
+                fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","correction_parameters.txt","TXT (*.txt)", options=options)
                 try:
                     name=os.path.basename(fileName)
                     path = os.path.dirname(fileName)

@@ -77,7 +77,7 @@ class Controler(ControlerBase):
         self.dt=None   ## Sample rate
         
         self.myinput = TDS.datalist()
-        self.mydatacorrection=TDS.fitdatalist()
+        self.mydatacorrection=TDS.datalist()
         self.myinput_cov = None
         self.mydatacorrection_cov = None        
         
@@ -158,7 +158,7 @@ class Controler(ControlerBase):
         
         self.myinput = TDS.datalist() # Warning: Don't remove the parentheses
 
-        self.mydatacorrection=TDS.fitdatalist()
+        self.mydatacorrection=TDS.datalist()
         
         self.myinput_cov = None
         self.mydatacorrection_cov = None    
@@ -506,7 +506,7 @@ class Controler(ControlerBase):
             
             f=open(os.path.join("temp",'temp_file_2.bin'),'rb')
             self.mydatacorrection = pickle.load(f)
-            self.fopt_init = pickle.load(f)
+            self.fopt_init = pickle.load(f)        #available only for delay,dilatation,amplitude correction
             f.close()
             
             """data_for_cov = []
