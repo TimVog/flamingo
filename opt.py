@@ -248,7 +248,7 @@ def optimALPSO(opt_prob, swarmsize, maxiter,algo,out_opt_full_info_filename): #o
     
 def optimSLSQP(opt_prob,maxiter):#ok
     slsqp_none = SLSQP()
-    #slsqp_none.setOption('IPRINT',1)
+    #slsqp_none.setOption('IPRINT',1)corec
     #slsqp_none.setOption('IFILE',out_opt_full_info_filename)
     slsqp_none.setOption('MAXIT',maxiter)
     slsqp_none.setOption('IOUT',15) 
@@ -327,7 +327,7 @@ out_opt_filename = "optim_result"
 out_opt_full_info_filename=os.path.join(out_dir,'{0}_full_info.out'.format(out_opt_filename.split('.')[0]))
 
 #data = TDS.inputdatafromfile(path_data)    ## We load the signal of the measured pulse with sample
-datacorrection = TDS.fitdatalist()
+datacorrection = TDS.datalist()
 
 """myglobalparameters=TDS.globalparameters   # t freq w
 myglobalparameters.t=data.time*1e-12 #this assumes input files are in ps ## We load the list with the time of the experiment
@@ -410,6 +410,51 @@ dt=myglobalparameters.t.item(2)-myglobalparameters.t.item(1)   ## Sample rate
 numberOfTrace = len(data.pulse)
 fopt_init = []
 exposant_ref = 4  # au lieu d'avoir x0 = 0.5 pour la ref, qui est dejà optimal et donc qui fait deconné l'ago d'optim, on aura x0 = 0.5-1e^exposant_ref
+
+
+
+if fit_periodic_sampling:
+    print("Periodic sampling optimization")
+
+    mymean = np.mean(data.pulse, axis = 0)
+
+    nu = periodic_sampling_freq_limit*1e12   # 1/s   Hz
+    delta_nu = myglobalparameters.freq[-1]/(len(myglobalparameters.freq)-1) # Hz
+    index_nu=int(nu/delta_nu)
+    
+    maxval_ps = np.array([dt/10, 12*2*np.pi*1e12, np.pi])
+    minval_ps = np.array([0, 6*2*np.pi*1e12, -np.pi])
+    guess_ps = np.array([0,0,0])
+    
+    x0_ps = (guess_ps-minval_ps)/(maxval_ps-minval_ps)
+    lb_ps=np.zeros(len(guess_ps))
+    ub_ps=np.ones(len(guess_ps))
+    
+    def error_periodic(x):
+        # x = A, v, phi
+        global mymean
+        x = x*(maxval_ps-minval_ps)+minval_ps
+        
+        ct = x[0]*np.cos(x[1]*myglobalparameters.t + x[2])    # s 
+        corrected = mymean - np.gradient(mymean, dt)*ct
+        
+        error = sum(abs((TDS.torch_rfft(corrected)[index_nu:])))
+        
+        #error = 0
+        #for i in range(index_nu,len(myglobalparameters.freq)):
+         #   error += abs(np.real(np.exp(-j*np.angle(np.fft.rfft(corrected)[i-index_nu])) * np.fft.rfft(corrected)[i]))
+
+        return error
+    
+    res_ps = optimize.dual_annealing(error_periodic, x0 = x0_ps, maxiter = maxiter_ps, bounds=list(zip(lb_ps, ub_ps)))
+    #res_ps = optimize.minimize(error_periodic,x0_ps, method='SLSQP',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':maxiter_ps})
+    #res_ps = optimize.minimize(error_periodic,x0_ps,method='L-BFGS-B',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':1000})
+    #res_ps = pso(error_periodic,lb_ps,ub_ps,swarmsize=100,minfunc=1e-18,minstep=1e-8,debug=1,phip=0.5,phig=0.5,maxiter=100)
+    
+    xopt_ps = res_ps.x*(maxval_ps-minval_ps)+minval_ps
+    print("Periodic sampling initial guess: ",xopt_ps, "\n")
+
+
 
 
 if fit_delay or fit_leftover_noise or fit_dilatation:
@@ -509,7 +554,7 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
             start = time.process_time()
             cback=Callback_slsqp()
             if trace == reference_number:
-                res = optimize.minimize(monerreur,ref_x0,method='SLSQP',bounds=list(zip(lb, up)),callback=cback,options={'maxiter':maxiter})
+                res = optimize.minimize(monerreur,ref_x0,method='SLSQP',bounds=list(zip(lb, up)),callback=cback,options={'maxiter':maxiter, 'ftol': 1e-20})
             else:
                 res = optimize.minimize(monerreur,x0,method='SLSQP',bounds=list(zip(lb, up)),callback=cback,options={'maxiter':maxiter})
             elapsed_time = time.process_time()-start
@@ -695,7 +740,7 @@ if fit_periodic_sampling:
     
     maxval_ps = np.array([dt/100, 12*2*np.pi*1e12, np.pi])
     minval_ps = np.array([0, 6*2*np.pi*1e12, -np.pi])
-    guess_ps = np.array([0,0,0])
+    guess_ps = xopt_ps
     
     x0_ps = (guess_ps-minval_ps)/(maxval_ps-minval_ps)
     lb_ps=np.zeros(len(guess_ps))
@@ -758,3 +803,8 @@ if fit_periodic_sampling:
     pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
     pickle.dump(fopt_init,f,pickle.HIGHEST_PROTOCOL)
     f.close()
+
+###################################################
+         #  ****************************************** PERIODIC SAMPLING *******************************************   
+
+

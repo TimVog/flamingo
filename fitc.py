@@ -77,7 +77,7 @@ class Controler(ControlerBase):
         self.dt=None   ## Sample rate
         
         self.myinput = TDS.datalist()
-        self.mydatacorrection=TDS.fitdatalist()
+        self.mydatacorrection=TDS.datalist()
         self.myinput_cov = None
         self.mydatacorrection_cov = None        
         
@@ -158,7 +158,7 @@ class Controler(ControlerBase):
         
         self.myinput = TDS.datalist() # Warning: Don't remove the parentheses
 
-        self.mydatacorrection=TDS.fitdatalist()
+        self.mydatacorrection=TDS.datalist()
         
         self.myinput_cov = None
         self.mydatacorrection_cov = None    
@@ -216,12 +216,12 @@ class Controler(ControlerBase):
         Freqwindowend = np.ones(len(self.myglobalparameters.freq))
         if self.Lfiltering:
             stepsmooth = cutstart/sharpcut
-            Freqwindowstart = (0.5+1e-5)+(0.5-1e-5)*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
+            Freqwindowstart = 0.5+0.5*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
         if self.Hfiltering:
             #cutend = comm.bcast(cutend,root=0) #for parralellisation
             #sharpcut = comm.bcast(sharpcut,root=0)
             stepsmooth = cutend/sharpcut
-            Freqwindowend = (0.5+1e-5)-(0.5-1e-5)*np.tanh((self.myglobalparameters.freq-cutend)/stepsmooth)                                 
+            Freqwindowend = 0.5-0.5*np.tanh((self.myglobalparameters.freq-cutend)/stepsmooth)                                 
         
         self.Freqwindow = Freqwindowstart*Freqwindowend
         self.timeWindow = np.ones(self.nsamplenotreal)
@@ -506,7 +506,7 @@ class Controler(ControlerBase):
             
             f=open(os.path.join("temp",'temp_file_2.bin'),'rb')
             self.mydatacorrection = pickle.load(f)
-            self.fopt_init = pickle.load(f)
+            self.fopt_init = pickle.load(f)        #available only for delay,dilatation,amplitude correction
             f.close()
             
             """data_for_cov = []

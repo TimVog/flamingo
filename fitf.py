@@ -117,16 +117,6 @@ class datalist:
      def add_ref(self, ref_number, refpulse):
         self.pulse.insert(ref_number, refpulse) # pulse with sample
         
-        
-class fitdatalist:
-     def __init__(self):
-        self.pulse = []# pulse with sample
-        
-     def add_trace(self, pulse):
-        self.pulse.append(pulse) # pulse with sample
-        
-     def add_ref(self, ref_number, refpulse):
-        self.pulse.insert(ref_number, refpulse) # pulse with sample
 
 
 # =============================================================================

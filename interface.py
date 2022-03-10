@@ -26,7 +26,7 @@ import time
 import fitf as TDS
 from fitc import Controler
 from scipy import signal
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 13})
 
 
 try:
@@ -1098,7 +1098,7 @@ class Saving_parameters(QGroupBox):
             try:
                 options = QFileDialog.Options()
                 options |= QFileDialog.DontUseNativeDialog
-                fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","corection_parameters.txt","TXT (*.txt)", options=options)
+                fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","correction_parameters.txt","TXT (*.txt)", options=options)
                 try:
                     name=os.path.basename(fileName)
                     path = os.path.dirname(fileName)
@@ -1319,11 +1319,9 @@ class Graphs_optimisation(QGroupBox):
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
             ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.torch_rfft(np.mean(myinput.pulse, axis = 0)*windows)))/np.log(10), 'b-', label='mean spectre (log)')
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse*windows, axis = 1), axis = 0)/np.sqrt(1000)))/np.log(10), 'b-', label='std spectre (log)')
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(np.mean(mydatacorrection.pulse, axis = 0)*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse*windows, axis = 1), axis = 0)/np.sqrt(1000)))/np.log(10), 'r-', label='corrected std spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse, axis = 1), axis = 0)))/np.log(10), 'b--', label='std spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse, axis = 1), axis = 0)))/np.log(10), 'r--', label='corrected std spectre (log)')
             ax1.legend()
