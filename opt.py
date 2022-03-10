@@ -248,7 +248,7 @@ def optimALPSO(opt_prob, swarmsize, maxiter,algo,out_opt_full_info_filename): #o
     
 def optimSLSQP(opt_prob,maxiter):#ok
     slsqp_none = SLSQP()
-    #slsqp_none.setOption('IPRINT',1)corec
+    #slsqp_none.setOption('IPRINT',1)
     #slsqp_none.setOption('IFILE',out_opt_full_info_filename)
     slsqp_none.setOption('MAXIT',maxiter)
     slsqp_none.setOption('IOUT',15) 
@@ -452,7 +452,6 @@ if fit_periodic_sampling:
     #res_ps = pso(error_periodic,lb_ps,ub_ps,swarmsize=100,minfunc=1e-18,minstep=1e-8,debug=1,phip=0.5,phig=0.5,maxiter=100)
     
     xopt_ps = res_ps.x*(maxval_ps-minval_ps)+minval_ps
-    print("Periodic sampling initial guess: ",xopt_ps, "\n")
 
 
 
