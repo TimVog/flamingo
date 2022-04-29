@@ -466,6 +466,11 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
         monerreur = errorchoice()
         objfunc = errorchoice_pyOpt()
         
+        if fit_leftover_noise:
+            if fit_delay:
+                x0[1] = 0.51 #coef a on evite de commencer l'init à 0 car parfois probleme de convergence
+            else:
+                x0[0] = 0.51  # coef a  
         
         if trace == reference_number:
             ref_x0= [0.5 - 0.1**exposant_ref]*len(totVariablesName)
