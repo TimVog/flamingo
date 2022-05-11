@@ -148,7 +148,7 @@ def errorchoice(): #basic #ok  #on veut coller le input à la ref
 
             leftnoise = np.ones(len(myglobalparameters.t)) - coef[0]*np.ones(len(myglobalparameters.t))   #(1-a)    
             myinputdatacorrected = leftnoise*(myinputdatacorrected_withdelay + (dilatation_coefguess[0]*myglobalparameters.t+dilatation_coefguess[1])*np.gradient(myinputdatacorrected_withdelay, dt))
-            erreur = np.linalg.norm(myreferencedata.Pulseinit - myinputdatacorrected )/np.linalg.norm(myinputdata.pulse)
+            erreur = np.linalg.norm(myreferencedata.Pulseinit - myinputdatacorrected )/np.linalg.norm(myreferencedata.Pulseinit)
             return erreur
             
     elif mode == "superresolution":
@@ -156,7 +156,7 @@ def errorchoice(): #basic #ok  #on veut coller le input à la ref
             Z = fit_transfer_function(x)
             Spectrumtot=Z*myinputdata.Spulse
             pulse_theo=(TDS.torch_irfft((np.array(Spectrumtot)), n = len(myinputdata.pulse))) # calcul from calculedpulse. In fact it is the same calcul as in the basic mode for i!=0
-            erreur=np.linalg.norm(myreferencedata.Pulseinit-pulse_theo)/myreferencedata.mynorm(myinputdata)
+            erreur=np.linalg.norm(myreferencedata.Pulseinit-pulse_theo)/np.linalg.norm(myreferencedata.Pulseinit)
             return erreur
     return monerreur
 
