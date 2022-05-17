@@ -176,8 +176,12 @@ class Controler(ControlerBase):
         
         with h5py.File(path_data, "r") as f:
             l = len(f)-1
+            #beg = np.array(f["timeaxis"])[0]
+            #end = np.array(f["timeaxis"])[-1]
             if trace_start >= l or (trace_end!=-1 and trace_end >= l):
-                self.refreshAll3("Invalid length, the file contains "+str(l)+" traces")
+                self.refreshAll3("Invalid length, the file contains "+str(l)+" traces\n all traces will be analysed then")
+            #if time_start <beg or time_end > end:
+             #   self.refreshAll3("Invalid length, the data is in interval ["+str(int(beg))+","+str(int(end))+"]ps")
             
         
         self.data= TDS.inputdatafromfile(path_data, self.trace_start,self.trace_end, self.time_start, self.time_end)    ## We load the signal of the measured pulse with sample
@@ -216,7 +220,7 @@ class Controler(ControlerBase):
         Freqwindowend = np.ones(len(self.myglobalparameters.freq))
         if self.Lfiltering:
             stepsmooth = cutstart/sharpcut
-            Freqwindowstart = 0.5+0.5*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
+            Freqwindowstart = 0.5+1e-2+(0.5-1e-2)*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
         if self.Hfiltering:
             #cutend = comm.bcast(cutend,root=0) #for parralellisation
             #sharpcut = comm.bcast(sharpcut,root=0)
@@ -227,7 +231,6 @@ class Controler(ControlerBase):
         self.timeWindow = np.ones(self.nsamplenotreal)
         
         for trace in  range(self.data.numberOfTrace):
-            #print(trace)
             myinputdata=TDS.mydata(self.data.Pulseinit[trace])    ## We create a variable containing the data related to the measured pulse with sample
 
             if modesuper == 1:
@@ -276,13 +279,16 @@ class Controler(ControlerBase):
                         term = (4/deltaTmax)*(self.myglobalparameters.t[k]-tlim1)
                         self.timeWindow[k] = 1-(3*term**2-2*term**3)
                 myinputdata.pulse = myinputdata.pulse*self.timeWindow
-                myinputdata.Spulse = (TDS.torch_rfft((myinputdata.pulse)))
+                myinputdata.Spulse = TDS.torch_rfft((myinputdata.pulse))
 
             self.myinput.add_trace(myinputdata.pulse)
         #if modesuper:
          #   self.myinput_cov = np.cov(np.array(self.myinput.pulse)[:,:self.nsample], rowvar=False)/np.sqrt(self.data.numberOfTrace)
         #else:
          #   self.myinput_cov = np.cov(self.myinput.pulse, rowvar=False)/np.sqrt(self.data.numberOfTrace)
+        self.myinput.moyenne = np.mean(self.myinput.pulse, axis= 0)
+        self.myinput.ecart_type = np.std(self.myinput.pulse, axis = 0)
+        self.myinput.std_fft = np.std(TDS.torch_rfft(self.myinput.pulse, axis = 1), axis = 0)
             
         if not os.path.isdir("temp"):
             os.mkdir("temp")
@@ -296,7 +302,6 @@ class Controler(ControlerBase):
         f.close()
         
         self.data.Pulseinit = [] #don't forget important
-
 
     def choices_ini_param( self, fit_delay, delaymax_guess, delay_limit, fit_dilatation, dilatation_limit,dilatationmax_guess,
                     fit_periodic_sampling, periodic_sampling_freq_limit, fit_leftover_noise, leftcoef_guess, leftcoef_limit):
@@ -517,6 +522,7 @@ class Controler(ControlerBase):
                     transfer_function = TDS.torch_rfft(np.mean(self.mydatacorrection, axis = 0))/TDS.torch_rfft(np.mean(self.data_without_sample.Pulseinit, axis = 0))
                 for i in range(self.data.numberOfTrace):
                     data_for_cov.append(TDS.torch_irfft(self.data_without_sample.Spulseinit*transfer_function), n = len(self.myglobalparameters.t))
+                    #empty self.data_without_sample
                 self.mydatacorrection_cov = np.cov(data_for_cov,rowvar = False)/np.sqrt(self.data.numberOfTrace)
             else:
                 if self.mode == "superresolution":
@@ -535,13 +541,13 @@ class Controler(ControlerBase):
             if self.fit_periodic_sampling:
                message += 'For periodic sampling: \n The best error was:     {}'.format(fopt_ps) + '\nThe best parameters were:     {}\n'.format(xopt_ps) + "\n"
             if self.fit_leftover_noise or self.fit_delay or self.fit_dilatation:
-                message+= "Sum of std Pulse E field (sqrt(sum(std^2))):\n   before correction \t{}\n".format(np.sqrt(sum(np.std(self.myinput.pulse, axis = 0)**2)))
-                message+= "   after correction \t{}\n\n".format(np.sqrt(sum(np.std(self.mydatacorrection.pulse, axis = 0)**2)))
+                message+= "Sum of std Pulse E field (sqrt(sum(std^2))):\n   before correction \t{}\n".format(np.sqrt(sum(self.myinput.ecart_type**2)))
+                message+= "   after correction \t{}\n\n".format(np.sqrt(sum(self.mydatacorrection.ecart_type**2)))
                 
                 #message+= "Sum of errors :\n   before correction \t{}\n".format(sum_fopt)
                 #message+= " Sum of errors after correction \t{}\n\n".format(sum_fopt)
 
-            citation= "Please cite this paper in any communication about any use of Correct@TDS : \nComming soon..."
+            citation= "Please cite this paper in any communication about any use of Correct@TDS : \nComing soon..."
             message += citation
             
             self.refreshAll3(message)
@@ -565,10 +571,9 @@ class Controler(ControlerBase):
                     if self.optim_succeed:
                         if file == 0:
                             if self.mode == "superresolution":
-                                out = np.column_stack((self.data.time, np.mean(self.mydatacorrection.pulse, axis = 0)[:self.nsample]))
-                                print("here")
+                                out = np.column_stack((self.data.time, self.mydatacorrection.moyenne[:self.nsample]))
                             else:
-                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.mydatacorrection.moyenne))
                             
                             if self.data.timestamp:
                                 custom+= str(self.data.timestamp[0])
@@ -640,9 +645,9 @@ class Controler(ControlerBase):
                             else:
                                 custom+= "unknown"
                             if self.mode == "superresolution":
-                                out = np.column_stack((self.data.time, np.mean(self.myinput.pulse, axis = 0)[:self.nsample]))
+                                out = np.column_stack((self.data.time, self.myinput.moyenne[:self.nsample]))
                             else:
-                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.myinput.pulse, axis = 0)))
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.myinput.moyenne))
                             np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
                         
                         #hdf =  h5py.File(os.path.join(path,filename),"w")

@@ -233,7 +233,7 @@ class InitParamWidget(QWidget):
         
         self.label_start = QLabel('\tStart (Hz)')
         self.label_end   = QLabel('\tEnd (Hz)')
-        self.label_sharp = QLabel('Sharpness of frequency filter \u2074')
+        self.label_sharp = QLabel('Sharpness of frequency filter \u00b2')
         self.start_box = QLineEdit()
         self.end_box   = QLineEdit()
         self.sharp_box = QLineEdit()
@@ -245,7 +245,7 @@ class InitParamWidget(QWidget):
         self.end_box.setText("6e12")
         self.sharp_box.setMaximumWidth(text_box_width)
         self.sharp_box.setMaximumHeight(text_box_height)
-        self.sharp_box.setText("10")
+        self.sharp_box.setText("2")
         
         # remove end of reference pulse
         self.label_zeros = QLabel('Set end of time trace to zero? \u2074')
@@ -432,7 +432,7 @@ class InitParamWidget(QWidget):
         sub_layoutv3 = QVBoxLayout()
         
         sub_layoutv2.addLayout(self.hlayout6)
-        sub_layoutv2.addLayout(self.hlayout7)
+        #sub_layoutv2.addLayout(self.hlayout7)
         sub_layoutv2.addLayout(self.hlayout11)
         
         sub_layoutv3.addLayout(self.hlayout9)
@@ -454,7 +454,7 @@ class InitParamWidget(QWidget):
         init_group2.setLayout(sub_layoutv3)
         
         sub_layoutv = QVBoxLayout()
-        sub_layoutv.addLayout(self.hlayout21)
+        #sub_layoutv.addLayout(self.hlayout21)
         sub_layoutv.addLayout(self.hlayout22)
 
         sub_layoutv.addLayout(self.hlayout17)
@@ -533,12 +533,12 @@ class InitParamWidget(QWidget):
             time_end = -1
             self.button_ask_data_length.setText("set")
             
-            if self.dialog.ui.length_initialized:
+            if self.dialog.ui.length_initialized or self.dialog.ui.time_initialized:
                 trace_start = self.dialog.ui.trace_start
                 trace_end = self.dialog.ui.trace_end
                 time_start = self.dialog.ui.time_start
                 time_end = self.dialog.ui.time_end
-                self.button_ask_data_length.setText(str(trace_start)+"-"+str(trace_end))
+                self.button_ask_data_length.setText(str(trace_start)+" - "+str(trace_end))
 
             try:
                 self.controler.choices_ini(self.path_data, self.path_data_ref, trace_start, trace_end, time_start, time_end,
@@ -547,7 +547,7 @@ class InitParamWidget(QWidget):
                 graph_option_2='Pulse (E_field)'
                 preview = 1
                 self.graph_widget.refresh()
-                self.controler.refreshAll3(" Data initialization done | "+str(self.controler.data.numberOfTrace)+ " time traces loaded between ["+ str(int(self.controler.data.time[0])) + " , " + str(int(self.controler.data.time[-1]))+ "] ps")
+                self.controler.refreshAll3(" Data initialization done | "+str(self.controler.data.numberOfTrace)+ " time traces loaded between ~ ["+ str(int(self.controler.data.time[0])) + " , " + str(int(self.controler.data.time[-1]))+ "] ps")
             except Exception as e:
                 print(e)
                 self.controler.error_message_path3()
@@ -668,6 +668,8 @@ class Ui_Dialog(object):
         self.controler = controler
         
         self.length_initialized = 0
+        self.time_initialized = 0
+
         self.trace_start = 0
         self.trace_end = -1
         self.time_start = 0
@@ -715,12 +717,13 @@ class Ui_Dialog(object):
         
         self.sub_layoutv10 = QVBoxLayout(self.dialog)
         self.sub_layoutv10.addLayout(self.hlayout0)
-        self.sub_layoutv10.addLayout(self.hlayout1)
+        #self.sub_layoutv10.addLayout(self.hlayout1)
         self.sub_layoutv10.addLayout(self.hlayout2)
   
     def action(self):
   
         self.length_initialized = 0
+        self.time_initialized = 0
         try:
             if self.length_start_limit_box.text() or self.length_end_limit_box.text():
                 trace_start = int(self.length_start_limit_box.text())
@@ -742,13 +745,21 @@ class Ui_Dialog(object):
             if self.time_start_limit_box.text() or self.time_end_limit_box.text():
                 time_start = float(self.time_start_limit_box.text())
                 time_end = float(self.time_end_limit_box.text())
+                if  time_start > time_end:
+                    raise ValueError
+                else:
+                    self.time_start = time_start
+                    self.time_end = time_end
+                
+                self.time_initialized = 1
+                
                 #TODO
                 #conditions for time
             
             self.dialog.close()
         except Exception as e:
             print(e)
-            self.controler.refreshAll3("Invalid values, please enter positive values and trace start number must be less than or equal to trace end")
+            self.controler.refreshAll3("Invalid values, please enter correct values, trace start must be less than or equal to trace end")
             return(0)
 
 class TextBoxWidget(QTextEdit):
@@ -761,11 +772,9 @@ class TextBoxWidget(QTextEdit):
         #self.append("Log")
         self.setMinimumWidth(560)
         
-        references = ['\u00b9 Time should be in ps.\nDatasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\nExample: if we have 1000 time traces, N-1 = 999',
-                      '\u00b2 Use to take into account the reference traces in the covariance computation \n(only if the initial data are measures with a sample)\ndon\'t forget to apply the same filters/correction to the reference before',
-                      '\u00b3 Use a linear function (or custom function) to remove the contribution of the dark noise after 200GHz.',
-                      '\u2074 Sharpness: 100 is almost a step function, 0.1 is really smooth. See graphs in optimization tab.'
-                      
+        references = ['\u00b9 Time should be in ps.\n  Datasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\n  Example: if we have 1000 time traces, N-1 = 999',
+                      '\u00b2 Sharpness 100 is almost a step function, 0.1 is really smooth. \n  See graphs in optimization tab.',
+                      '\u00b3 The recommanded algorithm is SLSQP, 100 iterations should be enough'
                       ]
         
         references_2=["\u2075 Error options:",
@@ -831,17 +840,23 @@ class Optimization_choices(QGroupBox):
         
         
         # Algorithm choice
-        self.label_algo = QLabel("Algorithm - delay/amplitude/dilatation")
+        self.label_algo = QLabel("Algorithm - delay/amplitude/dilatation \u00b3")
         #self.label_algo.setMaximumWidth(label_width)
         self.options_algo = QComboBox()
-        self.options_algo.addItems(['NumPy optimize swarm particle',
-                                    'ALPSO without parallelization',
-                                    'ALPSO with parallelization',
-                                    'SLSQP (pyOpt)',
-                                    'SLSQP (pyOpt with parallelization)',
+        """self.options_algo.addItems(['NumPy optimize swarm particle',
+                            'ALPSO without parallelization',
+                            'ALPSO with parallelization',
+                            'SLSQP (pyOpt)',
+                            'SLSQP (pyOpt with parallelization)',
+                            'L-BFGS-B',
+                            'SLSQP (scipy)',
+                            'Dual annealing'])"""
+    
+        self.options_algo.addItems(['Swarm Particle',
+                                    'ALPSO',
                                     'L-BFGS-B',
-                                    'SLSQP (scipy)',
-                                    'Dual annealing'])
+                                    'SLSQP',
+                                    'Dual Annealing'])
         #self.options_algo.setMaximumWidth(action_widget_width+40)
         self.options_algo.currentIndexChanged.connect(self.refresh_param)
         
@@ -962,6 +977,9 @@ class Optimization_choices(QGroupBox):
         #self.parent.parent.save_param.refresh()
         #self.controler.errorIndex = self.options_error.currentIndex() # for graph
         self.algo_index = self.options_algo.currentIndex()
+        if self.algo_index >1:
+            self.algo_index = self.algo_index+3 # il y 8 algo implemente de base, j'en ai enleve 3 de l'interface
+        
         if self.algo_index < 3:
             self.label_swarmsize.show()
             self.enter_swarmsize.show()
@@ -1268,7 +1286,7 @@ class Graphs_optimisation(QGroupBox):
         self.label_window.setMaximumHeight(30)
         self.toolbar.setMaximumHeight(30)
         self.hlayout3.addWidget(self.toolbar)
-        self.hlayout3.addWidget(self.label_window)
+        #self.hlayout3.addWidget(self.label_window)
         #window_group = QGroupBox()
         #window_group.setLayout(self.hlayout3)
         #window_group.setMaximumWidth(100)
@@ -1301,7 +1319,7 @@ class Graphs_optimisation(QGroupBox):
         global graph_option_2
         self.figure.clf()
         
-        apply_window = 1
+        apply_window = 0
         nsample = len(myinput.pulse[-1])
         windows = np.ones(nsample)
 
@@ -1318,10 +1336,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.torch_rfft(np.mean(myinput.pulse, axis = 0)*windows)))/np.log(10), 'b-', label='mean spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.torch_rfft(myinput.moyenne*windows)))/np.log(10), 'b-', label='mean spectre (log)')
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(np.mean(mydatacorrection.pulse, axis = 0)*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.moyenne*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse, axis = 1), axis = 0)))/np.log(10), 'b--', label='std spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse, axis = 1), axis = 0)))/np.log(10), 'r--', label='corrected std spectre (log)')
             ax1.legend()
@@ -1332,16 +1350,16 @@ class Graphs_optimisation(QGroupBox):
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
             if mode == "basic":
-                ax1.set_title('Pulse (E_field) - ', fontsize=10)
+                ax1.set_title('Pulse (E_field)', fontsize=10)
             else:
                 ax1.set_title('Pulse (E_field)', fontsize=10)
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Amplitude',color=color)
-            ax1.plot(myglobalparameters.t, np.mean(myinput.pulse, axis = 0)*windows, 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, myinput.moyenne*windows, 'b-', label='mean pulse')
             if not preview:
                 ax1.plot(myglobalparameters.t, myreferencedata.Pulseinit*windows, 'g-', label='reference pulse')
-                ax1.plot(myglobalparameters.t, np.mean(mydatacorrection.pulse, axis = 0)*windows, 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, mydatacorrection.moyenne*windows, 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
            
@@ -1427,9 +1445,9 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Standard deviation Pulse (E_field)',color=color)
-            ax1.plot(myglobalparameters.t, np.std(myinput.pulse*windows, axis = 0), 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, myinput.ecart_type*windows, 'b-', label='mean pulse')
             if not preview:
-                ax1.plot(myglobalparameters.t, np.std(mydatacorrection.pulse*windows, axis = 0), 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, mydatacorrection.ecart_type*windows, 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
             
@@ -1443,9 +1461,9 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Std E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse*windows, axis = 1), axis = 0)))/np.log(10), 'b-', label='std spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.std_fft))/np.log(10), 'b-', label='std spectre (log)')
             if not preview:
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse*windows, axis = 1), axis = 0)))/np.log(10), 'r-', label='corrected std spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(mydatacorrection.std_fft))/np.log(10), 'r-', label='corrected std spectre (log)')
             ax1.legend()
             ax1.grid()
             
@@ -1460,10 +1478,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Phase',color=color)
-            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(np.mean(myinput.pulse, axis = 0)*windows)))/myglobalparameters.freq, 'b-', label='mean phase')
+            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows)))/myglobalparameters.freq, 'b-', label='mean phase')
             if not preview:
                 ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows)))/myglobalparameters.freq, 'g-', label='reference phase')
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(np.mean(mydatacorrection.pulse, axis = 0)*windows)))/myglobalparameters.freq, 'r-', label='corrected mean phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows)))/myglobalparameters.freq, 'r-', label='corrected mean phase')
             ax1.legend()
             ax1.grid()
         
@@ -1612,9 +1630,6 @@ class Graphs_optimisation(QGroupBox):
         """except:
             print("There is a refresh problem")
             pass"""
-
-
-
 
 
 ###############################################################################
