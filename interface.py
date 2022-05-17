@@ -162,7 +162,7 @@ class InitParamWidget(QWidget):
         
         label_width=1500
         text_box_width=150
-        text_box_height=25
+        text_box_height=22
         
         # We create the text associated to the text box
 
@@ -170,11 +170,12 @@ class InitParamWidget(QWidget):
         self.label_path_data.setAlignment(Qt.AlignVCenter)
         self.label_path_data.resize(200, 100)
         self.label_path_data.resize(self.label_path_data.sizeHint())
-        self.label_path_data.setMaximumHeight(30)
+        self.label_path_data.setMaximumHeight(text_box_height)
         
         self.button_ask_path_data = QPushButton('browse')
         self.button_ask_path_data.resize(200, 100)
         self.button_ask_path_data.resize(self.button_ask_path_data.sizeHint())
+        self.button_ask_path_data.setMaximumHeight(text_box_height)
         self.button_ask_path_data.clicked.connect(self.get_path_data)
         
         
@@ -182,7 +183,7 @@ class InitParamWidget(QWidget):
         self.label_path_without_sample.setAlignment(Qt.AlignVCenter)
         self.label_path_without_sample.resize(200, 100)
         self.label_path_without_sample.resize(self.label_path_without_sample.sizeHint())
-        self.label_path_without_sample.setMaximumHeight(30)
+        self.label_path_without_sample.setMaximumHeight(text_box_height)
         
         
         self.button_ask_path_without_sample = QPushButton('browse')
@@ -195,11 +196,12 @@ class InitParamWidget(QWidget):
         self.label_data_length.setAlignment(Qt.AlignVCenter)
         self.label_data_length.resize(200, 100)
         self.label_data_length.resize(self.label_path_data.sizeHint())
-        self.label_data_length.setMaximumHeight(30)
+        self.label_data_length.setMaximumHeight(text_box_height)
         
         self.button_ask_data_length = QPushButton('set') #unset after
         self.button_ask_data_length.resize(200, 100)
         self.button_ask_data_length.resize(self.button_ask_path_data.sizeHint())
+        self.button_ask_data_length.setMaximumHeight(text_box_height)
         self.button_ask_data_length.clicked.connect(self.open_dialog)
         
         self.button_preview = QPushButton('Preview')
@@ -210,6 +212,7 @@ class InitParamWidget(QWidget):
         self.button_data = QPushButton('Submit data')
 
         self.button_parameters = QPushButton('Submit correction parameters')
+        self.button_parameters.setMaximumHeight(22)
         self.button_parameters.clicked.connect(self.on_click_param)
         self.button_parameters.pressed.connect(self.pressed_loading)
 
@@ -217,6 +220,7 @@ class InitParamWidget(QWidget):
         self.button = QPushButton('Submit / Preview')
         self.button.pressed.connect(self.pressed_loading)
         self.button.clicked.connect(self.on_click)
+        self.button.setMaximumHeight(text_box_height)
         
         # Filter or not filter
         self.LFfilter_label = QLabel('Filter low frequencies?')
@@ -233,7 +237,7 @@ class InitParamWidget(QWidget):
         
         self.label_start = QLabel('\tStart (Hz)')
         self.label_end   = QLabel('\tEnd (Hz)')
-        self.label_sharp = QLabel('Sharpness of frequency filter \u00b2')
+        self.label_sharp = QLabel('Sharpness of frequency filter \u2074')
         self.start_box = QLineEdit()
         self.end_box   = QLineEdit()
         self.sharp_box = QLineEdit()
@@ -277,23 +281,29 @@ class InitParamWidget(QWidget):
         # Delay
         self.label_delay = QLabel("Fit delay?")
         self.label_delay.setMaximumWidth(label_width)
+        self.label_delay.setMaximumHeight(text_box_height)
         self.options_delay = QComboBox()
         self.options_delay.addItems(['No','Yes'])
         self.options_delay.setMaximumWidth(text_box_width-75)
+        self.options_delay.setMaximumHeight(text_box_height)
         self.delayvalue_label = QLabel("Delay absolute value")
         self.delay_limit_box = QLineEdit()
         self.delay_limit_box.setMaximumWidth(text_box_width-24)
+        self.delay_limit_box.setMaximumHeight(text_box_height)
         self.delay_limit_box.setText("10e-12")
         
         # Leftover noise
         self.label_leftover = QLabel("Fit amplitude noise?")
         self.label_leftover.setMaximumWidth(label_width)
+        self.label_leftover.setMaximumHeight(text_box_height)
         self.options_leftover = QComboBox()
         self.options_leftover.addItems(['No','Yes'])
         self.options_leftover.setMaximumWidth(text_box_width-75)
+        self.options_leftover.setMaximumHeight(text_box_height)
         self.leftovervaluea_label = QLabel("Absolute value of         a")
         self.leftovera_limit_box = QLineEdit()
         self.leftovera_limit_box.setMaximumWidth(text_box_width-24)
+        self.leftovera_limit_box.setMaximumHeight(text_box_height)
         self.leftovera_limit_box.setText("10e-2")
         #self.leftovervaluec_label = QLabel(" c")
         #self.leftoverc_limit_box = QLineEdit()
@@ -302,27 +312,33 @@ class InitParamWidget(QWidget):
         # Dilatation
         self.label_dilatation = QLabel("Fit dilatation?")
         self.label_dilatation.setMaximumWidth(label_width)
+        self.label_dilatation.setMaximumHeight(text_box_height)
         self.options_dilatation = QComboBox()
         self.options_dilatation.addItems(['No','Yes'])
         self.options_dilatation.setMaximumWidth(text_box_width-75)
+        self.options_dilatation.setMaximumHeight(text_box_height)
         self.dilatationvaluea_label = QLabel("Absolute value of         a")
         self.dilatationa_limit_box = QLineEdit()
-        self.dilatationa_limit_box.setMaximumWidth(text_box_width-90)
+        self.dilatationa_limit_box.setMaximumWidth(text_box_width-24)
         self.dilatationa_limit_box.setText("10e-3")
         self.dilatationvalueb_label = QLabel("b")
         self.dilatationb_limit_box = QLineEdit()
         self.dilatationb_limit_box.setMaximumWidth(text_box_width-90) 
+        self.dilatationb_limit_box.setMaximumHeight(text_box_height)
         self.dilatationb_limit_box.setText("10e-12")
         
         #periodic sampling
         self.label_periodic_sampling = QLabel("Fit periodic sampling?")
         self.label_periodic_sampling.setMaximumWidth(label_width)
+        self.label_periodic_sampling.setMaximumHeight(text_box_height)
         self.options_periodic_sampling = QComboBox()
         self.options_periodic_sampling.addItems(['No','Yes'])
         self.options_periodic_sampling.setMaximumWidth(text_box_width-75)
+        self.options_periodic_sampling.setMaximumHeight(text_box_height)
         self.periodic_sampling_freq_label = QLabel("Frequency [THz]")
         self.periodic_sampling_freq_limit_box = QLineEdit()
         self.periodic_sampling_freq_limit_box.setMaximumWidth(text_box_width-24)
+        self.periodic_sampling_freq_limit_box.setMaximumHeight(text_box_height)
         
         # Super resolution
         self.label_super = QLabel("\tSuper resolution ")
@@ -382,7 +398,7 @@ class InitParamWidget(QWidget):
         self.hlayout13.addWidget(self.dilatationvaluea_label,0)
         self.hlayout13.addWidget(self.dilatationa_limit_box,0)
         self.hlayout13.addWidget(self.dilatationvalueb_label,0)
-        self.hlayout13.addWidget(self.dilatationb_limit_box,0)
+        #self.hlayout13.addWidget(self.dilatationb_limit_box,0)
         
         self.hlayout14.addWidget(self.label_periodic_sampling,0)
         self.hlayout14.addWidget(self.options_periodic_sampling,0)
@@ -432,7 +448,7 @@ class InitParamWidget(QWidget):
         sub_layoutv3 = QVBoxLayout()
         
         sub_layoutv2.addLayout(self.hlayout6)
-        #sub_layoutv2.addLayout(self.hlayout7)
+        sub_layoutv2.addLayout(self.hlayout7)
         sub_layoutv2.addLayout(self.hlayout11)
         
         sub_layoutv3.addLayout(self.hlayout9)
@@ -533,12 +549,12 @@ class InitParamWidget(QWidget):
             time_end = -1
             self.button_ask_data_length.setText("set")
             
-            if self.dialog.ui.length_initialized or self.dialog.ui.time_initialized:
+            if self.dialog.ui.length_initialized:
                 trace_start = self.dialog.ui.trace_start
                 trace_end = self.dialog.ui.trace_end
                 time_start = self.dialog.ui.time_start
                 time_end = self.dialog.ui.time_end
-                self.button_ask_data_length.setText(str(trace_start)+" - "+str(trace_end))
+                self.button_ask_data_length.setText(str(trace_start)+"-"+str(trace_end))
 
             try:
                 self.controler.choices_ini(self.path_data, self.path_data_ref, trace_start, trace_end, time_start, time_end,
@@ -547,7 +563,7 @@ class InitParamWidget(QWidget):
                 graph_option_2='Pulse (E_field)'
                 preview = 1
                 self.graph_widget.refresh()
-                self.controler.refreshAll3(" Data initialization done | "+str(self.controler.data.numberOfTrace)+ " time traces loaded between ~ ["+ str(int(self.controler.data.time[0])) + " , " + str(int(self.controler.data.time[-1]))+ "] ps")
+                self.controler.refreshAll3(" Data initialization done | "+str(self.controler.data.numberOfTrace)+ " time traces loaded between ["+ str(int(self.controler.data.time[0])) + " , " + str(int(self.controler.data.time[-1]))+ "] ps")
             except Exception as e:
                 print(e)
                 self.controler.error_message_path3()
@@ -668,8 +684,6 @@ class Ui_Dialog(object):
         self.controler = controler
         
         self.length_initialized = 0
-        self.time_initialized = 0
-
         self.trace_start = 0
         self.trace_end = -1
         self.time_start = 0
@@ -717,13 +731,12 @@ class Ui_Dialog(object):
         
         self.sub_layoutv10 = QVBoxLayout(self.dialog)
         self.sub_layoutv10.addLayout(self.hlayout0)
-        #self.sub_layoutv10.addLayout(self.hlayout1)
+        self.sub_layoutv10.addLayout(self.hlayout1)
         self.sub_layoutv10.addLayout(self.hlayout2)
   
     def action(self):
   
         self.length_initialized = 0
-        self.time_initialized = 0
         try:
             if self.length_start_limit_box.text() or self.length_end_limit_box.text():
                 trace_start = int(self.length_start_limit_box.text())
@@ -745,21 +758,13 @@ class Ui_Dialog(object):
             if self.time_start_limit_box.text() or self.time_end_limit_box.text():
                 time_start = float(self.time_start_limit_box.text())
                 time_end = float(self.time_end_limit_box.text())
-                if  time_start > time_end:
-                    raise ValueError
-                else:
-                    self.time_start = time_start
-                    self.time_end = time_end
-                
-                self.time_initialized = 1
-                
                 #TODO
                 #conditions for time
             
             self.dialog.close()
         except Exception as e:
             print(e)
-            self.controler.refreshAll3("Invalid values, please enter correct values, trace start must be less than or equal to trace end")
+            self.controler.refreshAll3("Invalid values, please enter positive values and trace start number must be less than or equal to trace end")
             return(0)
 
 class TextBoxWidget(QTextEdit):
@@ -772,9 +777,11 @@ class TextBoxWidget(QTextEdit):
         #self.append("Log")
         self.setMinimumWidth(560)
         
-        references = ['\u00b9 Time should be in ps.\n  Datasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\n  Example: if we have 1000 time traces, N-1 = 999',
-                      '\u00b2 Sharpness 100 is almost a step function, 0.1 is really smooth. \n  See graphs in optimization tab.',
-                      '\u00b3 The recommanded algorithm is SLSQP, 100 iterations should be enough'
+        references = ['\u00b9 Time should be in ps.\nDatasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\nExample: if we have 1000 time traces, N-1 = 999',
+                      '\u00b2 Use to take into account the reference traces in the covariance computation \n(only if the initial data are measures with a sample)\ndon\'t forget to apply the same filters/correction to the reference before',
+                      '\u00b3 Use a linear function (or custom function) to remove the contribution of the dark noise after 200GHz.',
+                      '\u2074 Sharpness: 100 is almost a step function, 0.1 is really smooth. See graphs in optimization tab.'
+                      
                       ]
         
         references_2=["\u2075 Error options:",
@@ -830,6 +837,7 @@ class Optimization_choices(QGroupBox):
         super().__init__(parent)
         self.controler=controler
         self.parent = parent
+        #self.setMinimumHeight(150)
         self.emptycellfile = None
         self.setTitle("Optimization")
         self.algo_index = 0
@@ -837,64 +845,65 @@ class Optimization_choices(QGroupBox):
         label_width=200
         action_widget_width=150
         corrective_width_factor=-12
+        text_box_height = 22
         
         
         # Algorithm choice
-        self.label_algo = QLabel("Algorithm - delay/amplitude/dilatation \u00b3")
-        #self.label_algo.setMaximumWidth(label_width)
+        self.label_algo = QLabel("Algorithm - delay/amplitude/dilatation")
+        self.label_algo.setMaximumHeight(text_box_height)
         self.options_algo = QComboBox()
-        """self.options_algo.addItems(['NumPy optimize swarm particle',
-                            'ALPSO without parallelization',
-                            'ALPSO with parallelization',
-                            'SLSQP (pyOpt)',
-                            'SLSQP (pyOpt with parallelization)',
-                            'L-BFGS-B',
-                            'SLSQP (scipy)',
-                            'Dual annealing'])"""
-    
-        self.options_algo.addItems(['Swarm Particle',
-                                    'ALPSO',
+        self.options_algo.addItems(['NumPy optimize swarm particle',
+                                    'ALPSO without parallelization',
+                                    'ALPSO with parallelization',
+                                    'SLSQP (pyOpt)',
+                                    'SLSQP (pyOpt with parallelization)',
                                     'L-BFGS-B',
-                                    'SLSQP',
-                                    'Dual Annealing'])
+                                    'SLSQP (scipy)',
+                                    'Dual annealing'])
         #self.options_algo.setMaximumWidth(action_widget_width+40)
         self.options_algo.currentIndexChanged.connect(self.refresh_param)
         
         
         self.label_algo_ps = QLabel("Algorithm - periodic sampling")
-        #self.label_algo.setMaximumWidth(label_width)
+        self.label_algo_ps.setMaximumHeight(text_box_height)
         self.options_algo_ps = QComboBox()
         self.options_algo_ps.addItems(['Dual annealing'])
-        #self.options_algo.setMaximumWidth(action_widget_width+40)
+        self.options_algo_ps.setMaximumHeight(text_box_height)
         self.options_algo_ps.currentIndexChanged.connect(self.refresh_param)
         
         
         # Error choice
         self.label_error = QLabel("Error function weighting \u2075")
-        #self.label_error.setMaximumWidth(label_width)
+        self.label_error.setMaximumHeight(text_box_height)
         self.options_error = QComboBox()
         self.options_error.addItems(['Constant'])
-       # self.options_error.setMaximumWidth(action_widget_width-12)
+        self.options_error.setMaximumHeight(text_box_height)
         self.options_error.currentIndexChanged.connect(self.refresh_param)
         
             # Number of iterations
         self.label_niter = QLabel("\tIterations")
+        self.label_niter.setMaximumHeight(text_box_height)
         self.enter_niter = QLineEdit()
         self.enter_niter.setMaximumWidth(action_widget_width +corrective_width_factor)
-        self.enter_niter.setMaximumHeight(30)  
+        self.enter_niter.setMaximumHeight(30)
+        self.enter_niter.setMaximumHeight(text_box_height)
     
             # Number of iterations ps
         self.label_niter_ps = QLabel("Iterations")
+        self.label_niter_ps.setMaximumHeight(text_box_height)
         self.enter_niter_ps = QLineEdit()
         self.enter_niter_ps.setMaximumWidth(action_widget_width +corrective_width_factor)
-        self.enter_niter_ps.setMaximumHeight(30)   
+        self.enter_niter_ps.setMaximumHeight(30) 
+        self.enter_niter_ps.setMaximumHeight(text_box_height)
         self.enter_niter_ps.setText("1000")
         
                     # SwarmSize
         self.label_swarmsize = QLabel("    Swarmsize")
+        self.label_swarmsize.setMaximumHeight(text_box_height)
         self.enter_swarmsize = QLineEdit()
         self.enter_swarmsize.setMaximumWidth(action_widget_width +corrective_width_factor)
         self.enter_swarmsize.setMaximumHeight(30)
+        self.enter_swarmsize.setMaximumHeight(text_box_height)
         
         
             # Button to launch optimization
@@ -902,7 +911,7 @@ class Optimization_choices(QGroupBox):
         self.begin_button.clicked.connect(self.begin_optimization)
         self.begin_button.pressed.connect(self.pressed_loading)
         #self.begin_button.setMaximumWidth(50)
-        #self.begin_button.setMaximumHeight(20)
+        self.begin_button.setMaximumHeight(text_box_height)
         
         # Wiget to see how many process are going to be used for the omptimization
         self.label_nb_proc = QLabel("How many process do you want to use?")
@@ -977,9 +986,6 @@ class Optimization_choices(QGroupBox):
         #self.parent.parent.save_param.refresh()
         #self.controler.errorIndex = self.options_error.currentIndex() # for graph
         self.algo_index = self.options_algo.currentIndex()
-        if self.algo_index >1:
-            self.algo_index = self.algo_index+3 # il y 8 algo implemente de base, j'en ai enleve 3 de l'interface
-        
         if self.algo_index < 3:
             self.label_swarmsize.show()
             self.enter_swarmsize.show()
@@ -1040,6 +1046,7 @@ class Saving_parameters(QGroupBox):
         super().__init__(parent)
         self.parent = parent
         self.controler = controler
+        text_box_height = 22
         self.setTitle("Saving results")
         
         # Corrective factors
@@ -1054,17 +1061,20 @@ class Saving_parameters(QGroupBox):
         self.button_save_mean.clicked.connect(self.save_mean)
        # self.button_outputdir.setMaximumWidth(action_widget_width +
                                         #   corrective_width_factor)
-        #self.button_outputdir.setMaximumHeight(30)    
+        self.button_save_mean.setMaximumHeight(text_box_height)    
         
 
         self.button_save_traces = QPushButton('Each traces (.h5)', self)
         self.button_save_traces.clicked.connect(self.save_traces)
+        self.button_save_traces.setMaximumHeight(text_box_height) 
         
         self.button_save_param = QPushButton('Correction parameters (.txt)', self)
         self.button_save_param.clicked.connect(self.save_param)
+        self.button_save_param.setMaximumHeight(text_box_height)
         
         self.button_save_cov = QPushButton('Covariance inverse (.h5)', self)
         self.button_save_cov.clicked.connect(self.save_cov)
+        self.button_save_cov.setMaximumHeight(text_box_height)
         
         sub_layout_h1=QHBoxLayout()
         sub_layout_h2=QHBoxLayout()
@@ -1286,7 +1296,7 @@ class Graphs_optimisation(QGroupBox):
         self.label_window.setMaximumHeight(30)
         self.toolbar.setMaximumHeight(30)
         self.hlayout3.addWidget(self.toolbar)
-        #self.hlayout3.addWidget(self.label_window)
+        self.hlayout3.addWidget(self.label_window)
         #window_group = QGroupBox()
         #window_group.setLayout(self.hlayout3)
         #window_group.setMaximumWidth(100)
@@ -1319,7 +1329,7 @@ class Graphs_optimisation(QGroupBox):
         global graph_option_2
         self.figure.clf()
         
-        apply_window = 0
+        apply_window = 1
         nsample = len(myinput.pulse[-1])
         windows = np.ones(nsample)
 
@@ -1336,10 +1346,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.torch_rfft(myinput.moyenne*windows)))/np.log(10), 'b-', label='mean spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.torch_rfft(np.mean(myinput.pulse, axis = 0)*windows)))/np.log(10), 'b-', label='mean spectre (log)')
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.moyenne*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(np.mean(mydatacorrection.pulse, axis = 0)*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse, axis = 1), axis = 0)))/np.log(10), 'b--', label='std spectre (log)')
                 #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse, axis = 1), axis = 0)))/np.log(10), 'r--', label='corrected std spectre (log)')
             ax1.legend()
@@ -1350,16 +1360,16 @@ class Graphs_optimisation(QGroupBox):
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
             if mode == "basic":
-                ax1.set_title('Pulse (E_field)', fontsize=10)
+                ax1.set_title('Pulse (E_field) - ', fontsize=10)
             else:
                 ax1.set_title('Pulse (E_field)', fontsize=10)
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Amplitude',color=color)
-            ax1.plot(myglobalparameters.t, myinput.moyenne*windows, 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, np.mean(myinput.pulse, axis = 0)*windows, 'b-', label='mean pulse')
             if not preview:
                 ax1.plot(myglobalparameters.t, myreferencedata.Pulseinit*windows, 'g-', label='reference pulse')
-                ax1.plot(myglobalparameters.t, mydatacorrection.moyenne*windows, 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, np.mean(mydatacorrection.pulse, axis = 0)*windows, 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
            
@@ -1445,9 +1455,9 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Standard deviation Pulse (E_field)',color=color)
-            ax1.plot(myglobalparameters.t, myinput.ecart_type*windows, 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, np.std(myinput.pulse*windows, axis = 0), 'b-', label='mean pulse')
             if not preview:
-                ax1.plot(myglobalparameters.t, mydatacorrection.ecart_type*windows, 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, np.std(mydatacorrection.pulse*windows, axis = 0), 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
             
@@ -1461,9 +1471,9 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Std E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.std_fft))/np.log(10), 'b-', label='std spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse*windows, axis = 1), axis = 0)))/np.log(10), 'b-', label='std spectre (log)')
             if not preview:
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(mydatacorrection.std_fft))/np.log(10), 'r-', label='corrected std spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse*windows, axis = 1), axis = 0)))/np.log(10), 'r-', label='corrected std spectre (log)')
             ax1.legend()
             ax1.grid()
             
@@ -1478,10 +1488,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Phase',color=color)
-            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows)))/myglobalparameters.freq, 'b-', label='mean phase')
+            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(np.mean(myinput.pulse, axis = 0)*windows)))/myglobalparameters.freq, 'b-', label='mean phase')
             if not preview:
                 ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows)))/myglobalparameters.freq, 'g-', label='reference phase')
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows)))/myglobalparameters.freq, 'r-', label='corrected mean phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(np.mean(mydatacorrection.pulse, axis = 0)*windows)))/myglobalparameters.freq, 'r-', label='corrected mean phase')
             ax1.legend()
             ax1.grid()
         
@@ -1630,6 +1640,9 @@ class Graphs_optimisation(QGroupBox):
         """except:
             print("There is a refresh problem")
             pass"""
+
+
+
 
 
 ###############################################################################

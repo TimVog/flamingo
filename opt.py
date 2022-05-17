@@ -49,15 +49,13 @@ try:
     from pyOpt import ALPSO  ## Library for optimization
 except:
     if myrank==0:
-        #print("Error importing pyopt")
-        pass
+        print("Error importing pyopt")
     
 try:
     from pyOpt import SLSQP  ## Library for optimization
 except:
     if myrank==0:
-        #print("Error importing pyopt SLSQP")
-        pass
+        print("Error importing pyopt SLSQP")
 
 
 # =============================================================================
@@ -138,6 +136,7 @@ def errorchoice(): #basic #ok  #on veut coller le input à la ref
                     dilatation_coefguess = x[1:3]
                 else:
                     dilatation_coefguess = x[0:2]
+                dilatation_coefguess[1] = 0
 
             if fit_leftover_noise:
                     leftover_guess = x[-2:]
@@ -149,8 +148,8 @@ def errorchoice(): #basic #ok  #on veut coller le input à la ref
             myinputdatacorrected_withdelay = np.fft.irfft(Z*myinputdata.Spulse, n = len(myglobalparameters.t))
 
             leftnoise = np.ones(len(myglobalparameters.t)) - coef[0]*np.ones(len(myglobalparameters.t))   #(1-a)    
-            myinputdatacorrected = leftnoise*(myinputdatacorrected_withdelay + (dilatation_coefguess[0]*myglobalparameters.t+dilatation_coefguess[1])*np.gradient(myinputdatacorrected_withdelay, dt))
-            erreur = np.linalg.norm(myreferencedata.Pulseinit - myinputdatacorrected )/np.linalg.norm(myinputdata.pulse)
+            myinputdatacorrected = leftnoise*(myinputdatacorrected_withdelay + (dilatation_coefguess[0]*myglobalparameters.t)*np.gradient(myinputdatacorrected_withdelay, dt))
+            erreur = np.linalg.norm(myreferencedata.Pulseinit - myinputdatacorrected )/np.linalg.norm(myreferencedata.Pulseinit)
             return erreur
             
     elif mode == "superresolution":
@@ -158,7 +157,7 @@ def errorchoice(): #basic #ok  #on veut coller le input à la ref
             Z = fit_transfer_function(x)
             Spectrumtot=Z*myinputdata.Spulse
             pulse_theo=(TDS.torch_irfft((np.array(Spectrumtot)), n = len(myinputdata.pulse))) # calcul from calculedpulse. In fact it is the same calcul as in the basic mode for i!=0
-            erreur=np.linalg.norm(myreferencedata.Pulseinit-pulse_theo)/myreferencedata.mynorm(myinputdata)
+            erreur=np.linalg.norm(myreferencedata.Pulseinit-pulse_theo)/np.linalg.norm(myreferencedata.Pulseinit)
             return erreur
     return monerreur
 
@@ -180,7 +179,7 @@ def fit_input(myinputdata, x):
             dilatation_coefguess = x[1:3]
         else:
             dilatation_coefguess = x[0:2]
-
+        dilatation_coefguess[1] = 0
     if fit_leftover_noise:
             leftover_guess = x[-2:]
 
@@ -191,7 +190,7 @@ def fit_input(myinputdata, x):
     myinputdatacorrected_withdelay = np.fft.irfft(Z*myinputdata.Spulse, n = len(myglobalparameters.t))
 
     leftnoise = np.ones(len(myglobalparameters.t)) - coef[0]*np.ones(len(myglobalparameters.t))   #(1-a)    
-    myinputdatacorrected = leftnoise*(myinputdatacorrected_withdelay + (dilatation_coefguess[0]*myglobalparameters.t+dilatation_coefguess[1])*np.gradient(myinputdatacorrected_withdelay, dt))
+    myinputdatacorrected = leftnoise*(myinputdatacorrected_withdelay + (dilatation_coefguess[0]*myglobalparameters.t)*np.gradient(myinputdatacorrected_withdelay, dt))
 
     return myinputdatacorrected
 
@@ -310,6 +309,7 @@ f.close()
 myglobalparameters = TDS.globalparameters()
 f=open(os.path.join("temp",'temp_file_7.bin'),'rb')
 myglobalparameters = pickle.load(f)
+nsample=len(myglobalparameters.t)
 f.close()
 
 
@@ -414,8 +414,11 @@ fopt_init = []
 exposant_ref = 4  # au lieu d'avoir x0 = 0.5 pour la ref, qui est dejà optimal et donc qui fait deconné l'ago d'optim, on aura x0 = 0.5-1e^exposant_ref
 
 
-if fit_periodic_sampling: #TO HAVE AN INITIAL GUESS
-    mymean = TDS.mean(data.pulse)
+
+if fit_periodic_sampling:
+    print("Periodic sampling optimization")
+
+    mymean = np.mean(data.pulse, axis = 0)
 
     nu = periodic_sampling_freq_limit*1e12   # 1/s   Hz
     delta_nu = myglobalparameters.freq[-1]/(len(myglobalparameters.freq)-1) # Hz
@@ -465,6 +468,17 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
         monerreur = errorchoice()
         objfunc = errorchoice_pyOpt()
         
+        if fit_leftover_noise:
+            if fit_dilatation:
+                if fit_delay:
+                    x0[1] = 0.505 #coef a on evite de commencer l'init à 0 car parfois probleme de convergence
+                else:
+                    x0[0] = 0.505  # coef a 
+            elif not fit_dilatation and trace ==0:
+                if fit_delay:
+                    x0[1] = 0.505 #coef a on evite de commencer l'init à 0 car parfois probleme de convergence
+                else:
+                    x0[0] = 0.505  # coef a 
         
         if trace == reference_number:
             ref_x0= [0.5 - 0.1**exposant_ref]*len(totVariablesName)
@@ -601,6 +615,11 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
                     print(e)
           
         #x0 = xopt
+        if fit_leftover_noise and not fit_dilatation:
+            if fit_delay:
+                x0[1] = xopt[1] #coef a on evite de commencer l'init à 0 car parfois probleme de convergence
+            else:
+                x0[0] = xopt[0]  # coef a  
         # =============================================================================
         
         if myrank == 0:
@@ -709,10 +728,7 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
     
     if myrank == 0 and not fit_periodic_sampling:
         #on ajoute la ref  
-        datacorrection.moyenne = np.mean(datacorrection.pulse, axis = 0)
-        datacorrection.ecart_type = np.std(datacorrection.pulse, axis = 0)
-        fft = TDS.torch_rfft(datacorrection.pulse, axis = 1)
-        datacorrection.std_fft = np.std(TDS.torch_rfft(datacorrection.pulse, axis = 1),axis = 0) 
+        
         #SAVE the result in binary for other modules
         f=open(os.path.join("temp",'temp_file_2.bin'),'wb')
         pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
@@ -731,9 +747,9 @@ if fit_periodic_sampling:
     print("Periodic sampling optimization")
 
     if fit_delay or fit_leftover_noise or fit_dilatation:
-        mymean = TDS.mean(datacorrection.pulse)   
+        mymean = np.mean(datacorrection.pulse, axis = 0)   
     else:
-        mymean = TDS.mean(data.pulse)
+        mymean = np.mean(data.pulse, axis = 0)
 
     nu = periodic_sampling_freq_limit*1e12   # 1/s   Hz
     delta_nu = myglobalparameters.freq[-1]/(len(myglobalparameters.freq)-1) # Hz
@@ -799,17 +815,13 @@ if fit_periodic_sampling:
     print('The best error was: \t{}'.format(fopt_ps))
     print('the best parameters were: \t{}\n'.format(xopt_ps))
 
-    datacorrection.moyenne = np.mean(datacorrection.pulse, axis = 0)
-    datacorrection.ecart_type = np.std(datacorrection.pulse, axis = 0)
-    fft = TDS.torch_rfft(datacorrection.pulse, axis = 1)
-    datacorrection.std_fft = np.std(TDS.torch_rfft(datacorrection.pulse, axis = 1),axis = 0) 
                 
     f=open(os.path.join("temp",'temp_file_2.bin'),'wb')
     pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
     pickle.dump(fopt_init,f,pickle.HIGHEST_PROTOCOL)
     f.close()
 
-
 ###################################################
+         #  ****************************************** PERIODIC SAMPLING *******************************************   
 
 
