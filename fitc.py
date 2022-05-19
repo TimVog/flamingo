@@ -216,7 +216,7 @@ class Controler(ControlerBase):
         Freqwindowend = np.ones(len(self.myglobalparameters.freq))
         if self.Lfiltering:
             stepsmooth = cutstart/sharpcut
-            Freqwindowstart = 0.5+1e-2+(0.5-1e-2)*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
+            Freqwindowstart = 0.5+0.5*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
         if self.Hfiltering:
             #cutend = comm.bcast(cutend,root=0) #for parralellisation
             #sharpcut = comm.bcast(sharpcut,root=0)
