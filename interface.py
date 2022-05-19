@@ -397,7 +397,7 @@ class InitParamWidget(QWidget):
         self.hlayout13.addWidget(self.options_dilatation,1)
         self.hlayout13.addWidget(self.dilatationvaluea_label,0)
         self.hlayout13.addWidget(self.dilatationa_limit_box,0)
-        self.hlayout13.addWidget(self.dilatationvalueb_label,0)
+        #self.hlayout13.addWidget(self.dilatationvalueb_label,0)
         #self.hlayout13.addWidget(self.dilatationb_limit_box,0)
         
         self.hlayout14.addWidget(self.label_periodic_sampling,0)
