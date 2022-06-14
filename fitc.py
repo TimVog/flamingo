@@ -12,6 +12,7 @@ import numpy as np
 import h5py
 import fitf as TDS
 import warnings
+from scipy import signal
 #warnings.filterwarnings("ignore") #this is just to remove the 'devided by zero' runtime worning for low frequency
 #we stricly advise to comment the above line as soon as you modify the code!
 
@@ -149,7 +150,7 @@ class Controler(ControlerBase):
         self.refreshAll("\n Processing... \n")
 
     def choices_ini(self, path_data, path_data_ref, trace_start, trace_end, time_start, time_end,
-                    Lfiltering_index, Hfiltering_index, zeros_index, dark_index, cutstart, cutend,sharpcut, slope, intercept,modesuper):
+                    Lfiltering_index, Hfiltering_index, zeros_index, dark_index, cutstart, cutend,sharpcut, slope, intercept,modesuper, apply_window):
         """Process all the informations given in the first panel of initialisation: 
             create instances of classes to store data, apply filters"""
 
@@ -216,7 +217,7 @@ class Controler(ControlerBase):
         Freqwindowend = np.ones(len(self.myglobalparameters.freq))
         if self.Lfiltering:
             stepsmooth = cutstart/sharpcut
-            Freqwindowstart = 0.5+0.5*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
+            Freqwindowstart = (0.5+1e-2)+(0.5-1e-2)*np.tanh((self.myglobalparameters.freq-cutstart)/stepsmooth)
         if self.Hfiltering:
             #cutend = comm.bcast(cutend,root=0) #for parralellisation
             #sharpcut = comm.bcast(sharpcut,root=0)
@@ -283,7 +284,15 @@ class Controler(ControlerBase):
          #   self.myinput_cov = np.cov(np.array(self.myinput.pulse)[:,:self.nsample], rowvar=False)/np.sqrt(self.data.numberOfTrace)
         #else:
          #   self.myinput_cov = np.cov(self.myinput.pulse, rowvar=False)/np.sqrt(self.data.numberOfTrace)
-            
+        self.myinput.moyenne = np.mean(self.myinput.pulse, axis= 0)
+        self.myinput.time_std = np.std(self.myinput.pulse, axis = 0)
+        self.myinput.freq_std = np.std(TDS.torch_rfft(self.myinput.pulse, axis = 1), axis = 0)
+        
+        if apply_window == 1:  # it's not a linear operation
+            if self.mode == "basic":
+                windows = signal.tukey(self.nsample, alpha = 0.05)
+                self.myinput.freq_std_with_window = np.std(TDS.torch_rfft(self.myinput.pulse*windows, axis = 1), axis = 0)
+
         if not os.path.isdir("temp"):
             os.mkdir("temp")
         f=open(os.path.join("temp",'temp_file_6.bin'),'wb')
@@ -293,9 +302,10 @@ class Controler(ControlerBase):
         
         f=open(os.path.join("temp",'temp_file_7.bin'),'wb')
         pickle.dump(self.myglobalparameters,f,pickle.HIGHEST_PROTOCOL)
+        pickle.dump(apply_window,f,pickle.HIGHEST_PROTOCOL)
         f.close()
         
-        self.data.Pulseinit = [] #don't forget important
+        self.data.Pulseinit = [] #don't forget to empty if, important
 
 
     def choices_ini_param( self, fit_delay, delaymax_guess, delay_limit, fit_dilatation, dilatation_limit,dilatationmax_guess,
@@ -535,8 +545,8 @@ class Controler(ControlerBase):
             if self.fit_periodic_sampling:
                message += 'For periodic sampling: \n The best error was:     {}'.format(fopt_ps) + '\nThe best parameters were:     {}\n'.format(xopt_ps) + "\n"
             if self.fit_leftover_noise or self.fit_delay or self.fit_dilatation:
-                message+= "Sum of std Pulse E field (sqrt(sum(std^2))):\n   before correction \t{}\n".format(np.sqrt(sum(np.std(self.myinput.pulse, axis = 0)**2)))
-                message+= "   after correction \t{}\n\n".format(np.sqrt(sum(np.std(self.mydatacorrection.pulse, axis = 0)**2)))
+                message+= "Sum of std Pulse E field (sqrt(sum(std^2))):\n   before correction \t{}\n".format(np.sqrt(sum(self.myinput.time_std**2)))
+                message+= "   after correction \t{}\n\n".format(np.sqrt(sum(self.mydatacorrection.time_std**2)))
                 
                 #message+= "Sum of errors :\n   before correction \t{}\n".format(sum_fopt)
                 #message+= " Sum of errors after correction \t{}\n\n".format(sum_fopt)
@@ -558,17 +568,16 @@ class Controler(ControlerBase):
         #3 covariance
       
         citation= "Please cite this paper in any communication about any use of Correct@TDS : \n Coming soon..."
-        title = "\n timeaxis \t E-field"
         custom = "\n Average over "+str(self.data.numberOfTrace)+" waveforms. Timestamp: "
         try:
             if self.initialised: 
                     if self.optim_succeed:
                         if file == 0:
+                            title = "\n timeaxis (ps) \t E-field"
                             if self.mode == "superresolution":
-                                out = np.column_stack((self.data.time, np.mean(self.mydatacorrection.pulse, axis = 0)[:self.nsample]))
-                                print("here")
+                                out = np.column_stack((self.data.time, self.mydatacorrection.moyenne[:self.nsample]))
                             else:
-                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.mydatacorrection.pulse, axis = 0)))
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.mydatacorrection.moyenne))
                             
                             if self.data.timestamp:
                                 custom+= str(self.data.timestamp[0])
@@ -633,16 +642,44 @@ class Controler(ControlerBase):
                                     dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
                                 count+=1
                             hdf.close()
+                            
+                        if file == 3:
+                            title = "\n timeaxis (ps) \t Std E-field"
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.data.time, self.mydatacorrection.time_std[:self.nsample]))
+                            else:
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.mydatacorrection.time_std))
+                            
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
+                            np.savetxt(os.path.join(path,filename),out, header= citation+custom+title, delimiter = "\t")
+                            
+                        if file == 4:
+                            title = "\n Frequency (Hz) \t Std E-field"
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.myglobalparameters.freq, self.mydatacorrection.freq_std[:self.nsample]))
+                            else:
+                                out = np.column_stack((self.myglobalparameters.freq, self.mydatacorrection.freq_std))
+                            
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
+                            np.savetxt(os.path.join(path,filename),out, header= citation+custom+title, delimiter = "\t")
+                            
                     else:
                         if file == 0:
+                            title = "\n timeaxis (ps) \t E-field"
                             if self.data.timestamp:
                                 custom+= str(self.data.timestamp[0])
                             else:
                                 custom+= "unknown"
                             if self.mode == "superresolution":
-                                out = np.column_stack((self.data.time, np.mean(self.myinput.pulse, axis = 0)[:self.nsample]))
+                                out = np.column_stack((self.data.time, self.myinput.moyenne[:self.nsample]))
                             else:
-                                out = np.column_stack((self.myglobalparameters.t*1e12, np.mean(self.myinput.pulse, axis = 0)))
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.myinput.moyenne))
                             np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
                         
                         #hdf =  h5py.File(os.path.join(path,filename),"w")
@@ -672,6 +709,32 @@ class Controler(ControlerBase):
                                     dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
                                 count+=1
                             hdf.close()
+                            
+                        if file == 3:
+                            title = "\n timeaxis (ps) \t Std E-field"
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.data.time, self.myinput.time_std[:self.nsample]))
+                            else:
+                                out = np.column_stack((self.myglobalparameters.t*1e12, self.myinput.time_std))
+                            np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
+                            
+                            
+                        if file == 4:
+                            title = "\n Frequency (Hz) \t Std E-field"
+                            if self.data.timestamp:
+                                custom+= str(self.data.timestamp[0])
+                            else:
+                                custom+= "unknown"
+                            if self.mode == "superresolution":
+                                out = np.column_stack((self.myglobalparameters.freq, self.myinput.freq_std[:self.nsample]))
+                            else:
+                                out = np.column_stack((self.myglobalparameters.freq, self.myinput.freq_std))
+                            np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
+                            
                     return 1
             else:
                 self.refreshAll3("Please enter initialization data first")

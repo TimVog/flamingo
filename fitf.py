@@ -110,6 +110,11 @@ class mydata:
 class datalist:
      def __init__(self):
         self.pulse = []# pulse with sample
+        self.moyenne = []
+        self.time_std = []
+        self.freq_std = []
+        self.freq_std_with_window = []
+
         
      def add_trace(self, pulse):
         self.pulse.append(pulse) # pulse with sample

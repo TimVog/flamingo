@@ -309,8 +309,13 @@ f.close()
 myglobalparameters = TDS.globalparameters()
 f=open(os.path.join("temp",'temp_file_7.bin'),'rb')
 myglobalparameters = pickle.load(f)
+apply_window = pickle.load(f)
 nsample=len(myglobalparameters.t)
 f.close()
+
+if apply_window == 1:  # it's not a linear operation
+    if mode == "basic":
+        windows = signal.tukey(nsample, alpha = 0.05)
 
 
 #f=open(os.path.join("temp",'temp_file_4.bin'),'rb') #TODO
@@ -728,7 +733,11 @@ if fit_delay or fit_leftover_noise or fit_dilatation:
     
     if myrank == 0 and not fit_periodic_sampling:
         #on ajoute la ref  
-        
+        datacorrection.moyenne = np.mean(datacorrection.pulse, axis = 0)
+        datacorrection.time_std = np.std(datacorrection.pulse, axis = 0)
+        datacorrection.freq_std = np.std(TDS.torch_rfft(datacorrection.pulse, axis = 1),axis = 0)
+        if apply_window == 1:
+            datacorrection.freq_std_with_window = np.std(TDS.torch_rfft(datacorrection.pulse*windows, axis = 1),axis = 0)
         #SAVE the result in binary for other modules
         f=open(os.path.join("temp",'temp_file_2.bin'),'wb')
         pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
@@ -815,6 +824,11 @@ if fit_periodic_sampling:
     print('The best error was: \t{}'.format(fopt_ps))
     print('the best parameters were: \t{}\n'.format(xopt_ps))
 
+    datacorrection.moyenne = np.mean(datacorrection.pulse, axis = 0)
+    datacorrection.time_std = np.std(datacorrection.pulse, axis = 0)
+    datacorrection.freq_std = np.std(TDS.torch_rfft(datacorrection.pulse, axis = 1),axis = 0) 
+    if apply_window == 1:
+        datacorrection.freq_std_with_window = np.std(TDS.torch_rfft(datacorrection.pulse*windows, axis = 1),axis = 0)
                 
     f=open(os.path.join("temp",'temp_file_2.bin'),'wb')
     pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
