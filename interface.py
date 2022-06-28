@@ -39,11 +39,6 @@ except:
     myrank=0
 
 
-"""    def on_click(self):
-        textboxValue = self.textbox.text()
-        QMessageBox.question(self, 'Message - pythonspot.com', "You typed: " + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
-        self.textbox.setText("")"""
-
 
 def deleteLayout(layout):
     if layout is not None:
@@ -88,7 +83,7 @@ class color:
 
 graph_option_2=None
 preview = 1
-apply_window = 1
+apply_window = 0
 
 
 class MyTableWidget(QWidget):
@@ -135,7 +130,6 @@ class InitParam_handler(QWidget):
         super().__init__(parent)
         self.parent = parent
         self.controler = controler
-        #self.setMaximumWidth(500)
 
     def refresh(self):
         init_instance = InitParamWidget(self.parent,self.controler)
@@ -180,7 +174,7 @@ class InitParamWidget(QWidget):
         self.button_ask_path_data.clicked.connect(self.get_path_data)
         
         
-        self.label_path_without_sample = QLabel('Select traces without sample (optional) \u00b2')
+        self.label_path_without_sample = QLabel('Select data without sample (optional) \u00b2')
         self.label_path_without_sample.setAlignment(Qt.AlignVCenter)
         self.label_path_without_sample.resize(200, 100)
         self.label_path_without_sample.resize(self.label_path_without_sample.sizeHint())
@@ -205,14 +199,10 @@ class InitParamWidget(QWidget):
         self.button_ask_data_length.setMaximumHeight(text_box_height)
         self.button_ask_data_length.clicked.connect(self.open_dialog)
         
-        self.button_preview = QPushButton('Preview')
-        self.button_preview.resize(200, 100)
-        self.button_preview.resize(self.button_preview.sizeHint())
-        #self.button_preview.clicked.connect(self.preview) todo
 
         self.button_data = QPushButton('Submit data')
 
-        self.button_parameters = QPushButton('Submit correction parameters')
+        self.button_parameters = QPushButton('Submit parameters')
         self.button_parameters.setMaximumHeight(22)
         self.button_parameters.clicked.connect(self.on_click_param)
         self.button_parameters.pressed.connect(self.pressed_loading)
@@ -224,13 +214,13 @@ class InitParamWidget(QWidget):
         self.button.setMaximumHeight(text_box_height)
         
         # Filter or not filter
-        self.LFfilter_label = QLabel('Filter low frequencies?')
+        self.LFfilter_label = QLabel('Filter low frequencies?\t      ')
         self.LFfilter_choice = QComboBox()
         self.LFfilter_choice.addItems(['No','Yes'])
         self.LFfilter_choice.setMaximumWidth(text_box_width)
         self.LFfilter_choice.setMaximumHeight(text_box_height)
         
-        self.HFfilter_label = QLabel('Filter high frequencies?')
+        self.HFfilter_label = QLabel('Filter high frequencies?\t      ')
         self.HFfilter_choice = QComboBox()
         self.HFfilter_choice.addItems(['No','Yes'])
         self.HFfilter_choice.setMaximumWidth(text_box_width)
@@ -248,36 +238,18 @@ class InitParamWidget(QWidget):
         self.end_box.setMaximumWidth(text_box_width)
         self.end_box.setMaximumHeight(text_box_height)
         self.end_box.setText("6e12")
-        self.sharp_box.setMaximumWidth(text_box_width)
+        self.sharp_box.setMaximumWidth(text_box_width-85)
         self.sharp_box.setMaximumHeight(text_box_height)
         self.sharp_box.setText("2")
         
-        # remove end of reference pulse
-        self.label_zeros = QLabel('Set end of time trace to zero? \u2074')
-        self.zeros_choice = QComboBox()
-        self.zeros_choice.addItems(['No','Yes'])
-        self.zeros_choice.setMaximumWidth(text_box_width-7)
-        self.zeros_choice.setMaximumHeight(text_box_height)
-        
-        #Remove baseline "dark" noise
-        self.label_dark = QLabel('Remove dark noise ramp? \u00b3')
-        self.dark_choice = QComboBox()
-        self.dark_choice.addItems(['No','Yes']) #Use a function to add
-        self.dark_choice.setMaximumWidth(text_box_width-7)
-        self.dark_choice.setMaximumHeight(text_box_height)
-        self.dark_choice.currentIndexChanged.connect(self.superresolution)
-        
-        self.label_slope = QLabel('\tSlope')
-        self.slope_box = QLineEdit()
-        self.slope_box.setMaximumWidth(text_box_width-7)
-        self.slope_box.setMaximumHeight(text_box_height)
-        self.slope_box.setText("4e-6")
-        
-        self.label_intercept = QLabel('    Intercept')
-        self.intercept_box = QLineEdit()
-        self.intercept_box.setMaximumWidth(text_box_width-7)
-        self.intercept_box.setMaximumHeight(text_box_height)
-        self.intercept_box.setText("0.3e-3")
+        # Super resolution
+        self.label_super = QLabel("            Super resolution ")
+        self.options_super = QComboBox()
+        self.options_super.addItems(['No','Yes'])
+        self.options_super.setMinimumWidth(text_box_width-75)
+        self.options_super.setMaximumWidth(text_box_width)
+        self.options_super.setMaximumHeight(text_box_height)
+    
         
         # Delay
         self.label_delay = QLabel("Fit delay?")
@@ -339,14 +311,10 @@ class InitParamWidget(QWidget):
         self.options_periodic_sampling.setMaximumHeight(text_box_height)
         self.periodic_sampling_freq_label = QLabel("Frequency [THz]")
         self.periodic_sampling_freq_limit_box = QLineEdit()
+        self.periodic_sampling_freq_limit_box.setText("7.5")
         self.periodic_sampling_freq_limit_box.setMaximumWidth(text_box_width-24)
         self.periodic_sampling_freq_limit_box.setMaximumHeight(text_box_height)
         
-        # Super resolution
-        self.label_super = QLabel("\tSuper resolution ")
-        self.options_super = QComboBox()
-        self.options_super.addItems(['No','Yes'])
-        self.options_super.setMaximumWidth(text_box_width-24)
 
 
         # Organisation layout
@@ -380,7 +348,6 @@ class InitParamWidget(QWidget):
         self.hlayout11.addWidget(self.button_ask_data_length,17)
         
         self.hlayout8.addWidget(self.button_data)
-        #self.hlayout8.addWidget(self.options_super,1)
         
         self.hlayout9.addWidget(self.label_delay,0)
         self.hlayout9.addWidget(self.options_delay,1)
@@ -421,30 +388,9 @@ class InitParamWidget(QWidget):
 
         self.hlayout19.addWidget(self.label_sharp,1)
         self.hlayout19.addWidget(self.sharp_box,0)
+        self.hlayout19.addWidget(self.label_super,1)
+        self.hlayout19.addWidget(self.options_super,0)
 
-
-        self.hlayout20.addWidget(self.label_zeros,0)
-        self.hlayout20.addWidget(self.zeros_choice,0)
-        
-        self.hlayout21.addWidget(self.label_dark,0)
-        self.hlayout21.addWidget(self.dark_choice,1)
-        self.hlayout21.addWidget(self.label_super,0)
-        self.hlayout21.addWidget(self.options_super,1)
-        self.label_super.hide()
-        self.options_super.hide()
-        
-        
-        #self.hlayout8.addWidget(self.label_super,0)
-        #self.hlayout8.addWidget(self.options_super,1)
-        
-        self.hlayout22.addWidget(self.label_slope,0)
-        self.hlayout22.addWidget(self.slope_box,0)
-        self.hlayout22.addWidget(self.label_intercept,0)
-        self.hlayout22.addWidget(self.intercept_box,0)
-        self.label_slope.hide()
-        self.slope_box.hide()
-        self.label_intercept.hide()
-        self.intercept_box.hide()
         
         sub_layoutv2 = QVBoxLayout()
         sub_layoutv3 = QVBoxLayout()
@@ -505,23 +451,6 @@ class InitParamWidget(QWidget):
         main_layout.addWidget(self.graph_widget,1)
         self.setLayout(main_layout)
 
-    def superresolution(self):
-        if self.dark_choice.currentIndex() == 1:
-            self.label_super.show()
-            self.options_super.show()
-            self.label_slope.show()
-            self.slope_box.show()
-            self.label_intercept.show()
-            self.intercept_box.show()
-        else:
-            self.label_super.hide()
-            self.options_super.setCurrentIndex(0)
-            self.options_super.hide()
-            self.label_slope.hide()
-            self.slope_box.hide()
-            self.label_intercept.hide()
-            self.intercept_box.hide()
-
     def pressed_loading1(self):
         self.controler.loading_text()
         
@@ -533,17 +462,10 @@ class InitParamWidget(QWidget):
         try:
             Lfiltering_index = self.LFfilter_choice.currentIndex()
             Hfiltering_index = self.HFfilter_choice.currentIndex()
-            #zeros_index = self.zeros_choice.currentIndex()
-            zeros_index = 0
-            dark_index = self.dark_choice.currentIndex()
             cutstart = float(self.start_box.text())
             cutend   = float(self.end_box.text())
             cutsharp = float(self.sharp_box.text())
-            modesuper = 0
-            if(dark_index):
-                modesuper = self.options_super.currentIndex()
-            slope = float(self.slope_box.text())
-            intercept = float(self.intercept_box.text())
+            modesuper = self.options_super.currentIndex()
             
             trace_start = 0
             trace_end = -1
@@ -560,8 +482,8 @@ class InitParamWidget(QWidget):
 
             try:
                 self.controler.choices_ini(self.path_data, self.path_data_ref, trace_start, trace_end, time_start, time_end,
-                                               Lfiltering_index, Hfiltering_index, zeros_index, dark_index, cutstart, 
-                                               cutend, cutsharp, slope, intercept, modesuper, apply_window)
+                                               Lfiltering_index, Hfiltering_index, cutstart, 
+                                               cutend, cutsharp, modesuper, apply_window)
                 graph_option_2='Pulse (E_field)'
                 preview = 1
                 self.graph_widget.refresh()
@@ -713,7 +635,6 @@ class Ui_Dialog(object):
         
         self.button_submit_length = QPushButton('Submit')
         self.button_submit_length.clicked.connect(self.action)
-        #self.button.clicked.connect(self.on_click)
         
         self.hlayout0=QHBoxLayout()
         self.hlayout1=QHBoxLayout()
@@ -776,13 +697,13 @@ class TextBoxWidget(QTextEdit):
         self.controler.addClient(self)
         self.controler.addClient3(self)
         self.setReadOnly(True)
-        #self.append("Log")
+
         self.setMinimumWidth(560)
         
         references = ['\u00b9 Time should be in ps.\nDatasets in the hdf5 must be named ["timeaxis", "0", "1", ..., "N-1"]\nExample: if we have 1000 time traces, N-1 = 999',
                       '\u00b2 Use to take into account the reference traces in the covariance computation \n(only if the initial data are measures with a sample)\ndon\'t forget to apply the same filters/correction to the reference before',
-                      '\u00b3 Sharpness: 100 is almost a step function, 0.1 is really smooth. See graphs in optimization tab.'
-                      
+                      '\u00b3 Sharpness: 100 is almost a step function, 0.1 is really smooth. See graphs in optimization tab.',
+                      '\u2074 Plot the noise convolution matrix or the covariance matrix depending on the input \n The matrix must be saved for its computation (Ledoit-Wolf Shrinkage)'
                       ]
         
         references_2=["\u2075 Error options:",
@@ -792,9 +713,6 @@ class TextBoxWidget(QTextEdit):
         for reference in references:
             self.append(reference)
             self.append('')
-            
-        #for i in references_2:
-        #    self.append(i)
             
     def refresh(self):
         message = self.controler.message
@@ -873,14 +791,6 @@ class Optimization_choices(QGroupBox):
         self.options_algo_ps.currentIndexChanged.connect(self.refresh_param)
         
         
-        # Error choice
-        self.label_error = QLabel("Error function weighting \u2075")
-        self.label_error.setMaximumHeight(text_box_height)
-        self.options_error = QComboBox()
-        self.options_error.addItems(['Constant'])
-        self.options_error.setMaximumHeight(text_box_height)
-        self.options_error.currentIndexChanged.connect(self.refresh_param)
-        
             # Number of iterations
         self.label_niter = QLabel("\tIterations")
         self.label_niter.setMaximumHeight(text_box_height)
@@ -945,7 +855,6 @@ class Optimization_choices(QGroupBox):
         sub_layout_h_2.addWidget(self.label_niter_ps,0)
         sub_layout_h_2.addWidget(self.enter_niter_ps,0)
         sub_layout_h_8.addWidget(self.begin_button)
-        #sub_layout_h_8.addWidget(self.options_error)
 
         # Vertical layout   
         main_layout.addLayout(sub_layout_h_7)
@@ -984,8 +893,6 @@ class Optimization_choices(QGroupBox):
         print(time.time()-t1)
     
     def refresh_param(self):
-        #self.parent.parent.save_param.refresh()
-        #self.controler.errorIndex = self.options_error.currentIndex() # for graph
         self.algo_index = self.options_algo.currentIndex()
         if self.algo_index < 3:
             self.label_swarmsize.show()
@@ -1037,7 +944,6 @@ class Optimization_choices(QGroupBox):
             self.controler.algo_parameters(choix_algo,swarmsize,niter,niter_ps)
         except Exception as e:
             print(e)
-            print(e)
             self.controler.invalid_niter()
             return(0)
         return(1)
@@ -1054,14 +960,10 @@ class Saving_parameters(QGroupBox):
         action_widget_width=150
         corrective_width_factor=-12
 
-        
-        # Widget to see output directory
-        #self.label_outputdir = QLabel('Output directory: ')
-        #self.label_outputdir.setMaximumWidth(label_width)
+
         self.button_save_mean = QPushButton('Mean (.txt)', self)
         self.button_save_mean.clicked.connect(self.save_mean)
-       # self.button_outputdir.setMaximumWidth(action_widget_width +
-                                        #   corrective_width_factor)
+
         self.button_save_mean.setMaximumHeight(text_box_height)    
         
         self.button_save_traces = QPushButton('Time traces (.h5)', self)
@@ -1072,7 +974,7 @@ class Saving_parameters(QGroupBox):
         self.button_save_param.clicked.connect(self.save_param)
         self.button_save_param.setMaximumHeight(text_box_height)
         
-        self.button_save_cov = QPushButton('Noise matrix (.h5)', self)
+        self.button_save_cov = QPushButton('Noise matrix inverse (.h5)', self)
         self.button_save_cov.clicked.connect(self.save_cov)
         self.button_save_cov.setMaximumHeight(text_box_height)
         
@@ -1103,7 +1005,30 @@ class Saving_parameters(QGroupBox):
         self.setLayout(self.main_layout)
         
     def save_cov(self):
-        self.controler.refreshAll3(" Not yet implemented")
+        global preview
+        if self.controler.initialised:
+            try:
+                options = QFileDialog.Options()
+                options |= QFileDialog.DontUseNativeDialog
+                fileName, _ = QFileDialog.getSaveFileName(self,"Covariance / Noise convolution matrix","noise.h5","HDF5 (*.h5)", options=options)
+                try:
+                    name=os.path.basename(fileName)
+                    path = os.path.dirname(fileName)
+                    if name:
+                        saved = self.controler.save_data(name, path, 5)
+                        if saved:
+                            if not self.controler.optim_succeed:
+                                preview = 1
+                            self.controler.refreshAll3(" Saving matrix - Done")
+                        else:
+                            print("Something went wrong")          
+                except:
+                    self.controler.error_message_output_filename()
+            except:
+                self.controler.error_message_output_filename()
+                return(0)
+        else:
+            self.controler.refreshAll3("Please enter initialization data first")
     
     def save_mean(self):
         global preview
@@ -1270,46 +1195,14 @@ class Graphs_optimisation(QGroupBox):
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.canvas.draw() 
         
-        # Create buttons to chose what to plot
-        # E field
-        #self.button_E_field = QPushButton('E field', self)
-        #self.button_E_field.clicked.connect(self.E_field_graph)
-        # E field [dB]
+
         self.button_E_field_dB = QPushButton('\nE field  [dB]\n', self)
         self.button_E_field_dB.clicked.connect(self.E_field_dB_graph)
         # Pulse (E field)
         self.button_Pulse_E_field = QPushButton('\nPulse E field\n', self)
         self.button_Pulse_E_field.clicked.connect(self.Pulse_E_field_graph)
-        # Pulse (E field) [dB]
-        """self.button_Pulse_E_field_dB = QPushButton('Pulse E field [dB]', self)
-        self.button_Pulse_E_field_dB.clicked.connect(self.Pulse_E_field_dB_graph)
-        # E field residue
-        self.button_E_field_residue = QPushButton('E field residue', self)
-        self.button_E_field_residue.clicked.connect(self.E_field_residue_graph)
-        # E field residue [dB]
-        self.button_E_field_residue_dB = QPushButton('E field residue [dB]', self)
-        self.button_E_field_residue_dB.clicked.connect(self.E_field_residue_dB_graph)
-        # Pulse residue (E field)
-        self.button_Pulse_E_field_residue = QPushButton('E(t) residue', self)
-        self.button_Pulse_E_field_residue.clicked.connect(self.Pulse_E_field_residue_graph)
-        # Pulse residue (E field) [dB]
-        self.button_Pulse_E_field_residue_dB = QPushButton('E(t) residue [dB]', self)
-        self.button_Pulse_E_field_residue_dB.clicked.connect(self.Pulse_E_field_residue_dB_graph)
-                # delay
-        self.button_Delay = QPushButton('Delay', self)
-        self.button_Delay.clicked.connect(self.Delay_graph)
-                # coef a
-        self.button_CoefA = QPushButton('Coef a', self)
-        self.button_CoefA.clicked.connect(self.CoefA_graph)
-                # coef c
-        self.button_CoefC = QPushButton('Coef c', self)
-        self.button_CoefC.clicked.connect(self.CoefC_graph)
-        
-                # delay
-        #self.button_Delay_by_index = QPushButton('Delay by index', self)
-        #self.button_Delay_by_index.clicked.connect(self.Delay_by_index_graph)"""
-        
-                # Pulse (E field) std
+
+
         self.button_Pulse_E_field_std = QPushButton('\nStd Pulse E field\n', self)
         self.button_Pulse_E_field_std.clicked.connect(self.Pulse_E_field_std_graph)
         # Pulse (E field) [dB] std
@@ -1320,24 +1213,15 @@ class Graphs_optimisation(QGroupBox):
         self.button_Phase = QPushButton('\nPhase\n', self)
         self.button_Phase.clicked.connect(self.Phase_graph)
 
-        #self.button_Phase_std = QPushButton('Std Phase', self)
-        #self.button_Phase_std.clicked.connect(self.Phase_std_graph)
         
         #Parameters
         self.button_Correction_param = QPushButton('\nCorrection parameters\n', self)
         self.button_Correction_param.clicked.connect(self.Correction_param_graph)
         
-        #Parameters
-        #self.button_Correction_param2 = QPushButton('\nCorrection parameters2\n', self)
-        #self.button_Correction_param2.clicked.connect(self.Correction_param_graph2)
-
-        #Parameters
-        #self.button_Errors = QPushButton('\nErrors\n', self)
-        #self.button_Errors.clicked.connect(self.Errors)
         
         #Covariance
-        #self.button_Cov_Pulse_E_field= QPushButton('(@_@)\nCovariance matrix\n!!can take time!!', self)
-        #self.button_Cov_Pulse_E_field.clicked.connect (self.Covariance_Pulse)
+        self.button_Cov_Pulse_E_field= QPushButton('\nNoise matrix \u2074\n', self)
+        self.button_Cov_Pulse_E_field.clicked.connect (self.Covariance_Pulse)
         
         self.label_window = QLabel("Window")  
 
@@ -1346,17 +1230,16 @@ class Graphs_optimisation(QGroupBox):
         self.hlayout = QHBoxLayout()
         self.hlayout2 = QHBoxLayout()
         self.hlayout3=QHBoxLayout()
-        #self.hlayout.addWidget(self.button_E_field)
+
         self.hlayout.addWidget(self.button_Pulse_E_field)
         self.hlayout.addWidget(self.button_E_field_dB)
-        #self.hlayout.addWidget(self.button_Pulse_E_field_dB)
+
         self.hlayout.addWidget(self.button_Pulse_E_field_std)
         self.hlayout.addWidget(self.button_E_field_dB_std)
         self.hlayout.addWidget(self.button_Phase)
         self.hlayout.addWidget(self.button_Correction_param)
-        #self.hlayout.addWidget(self.button_Correction_param2)
-        #self.hlayout.addWidget(self.button_Errors)
-        #self.hlayout.addWidget(self.button_Cov_Pulse_E_field)
+        self.hlayout.addWidget(self.button_Cov_Pulse_E_field)
+        
         self.label_window.setMaximumHeight(30)
         self.toolbar.setMaximumHeight(30)
         self.hlayout3.addWidget(self.toolbar)
@@ -1367,16 +1250,6 @@ class Graphs_optimisation(QGroupBox):
         #window_group.setMaximumHeight(60)
 
 
-        #self.hlayout.addWidget(self.button_Delay)
-        #self.hlayout.addWidget(self.button_CoefA)
-        #self.hlayout2.addWidget(self.button_E_field_residue)
-        #self.hlayout2.addWidget(self.button_E_field_residue_dB)
-        #self.hlayout2.addWidget(self.button_Pulse_E_field_residue)
-        #self.hlayout2.addWidget(self.button_Pulse_E_field_residue_dB)
-        #self.hlayout2.addWidget(self.button_Phase_std)
-        #self.hlayout.addWidget(self.button_Delay_by_index)
-        #self.hlayout2.addWidget(self.button_CoefC)
-
         self.vlayoutmain.addLayout(self.hlayout3)
         #self.vlayoutmain.addWidget(self.toolbar,1)
         #self.vlayoutmain.addWidget(window_group,Qt.AlignRight)
@@ -1385,27 +1258,26 @@ class Graphs_optimisation(QGroupBox):
         self.vlayoutmain.addLayout(self.hlayout)
         self.vlayoutmain.addLayout(self.hlayout2)
         self.setLayout(self.vlayoutmain)
-        #self.drawgraph()
 
 
-    def draw_graph_init(self,myinput, myreferencedata, ref_number, mydatacorrection, delay_correction, dilatation_correction, leftover_correction,myinput_cov, mydatacorrection_cov,
+    def draw_graph_init(self,myinput, myreferencedata, ncm, ncm_inverse, ref_number, mydatacorrection, delay_correction, dilatation_correction, leftover_correction,
                         myglobalparameters, fopt, fopt_init, mode, preview):
         global graph_option_2
         self.figure.clf()
         
         nsample = len(myinput.pulse[-1])
         windows = np.ones(nsample)
+        n_traces = len(myinput.pulse)
 
-        if apply_window and mode == "basic":
+        if apply_window:
             windows = signal.tukey(nsample, alpha = 0.05)  #don't forget to modify it in fitc and opt files if it's modify here 
 
         if graph_option_2=='E_field [dB]':
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
-            if mode == "basic":
-                ax1.set_title('E_field ', fontsize=10)
-            else:
-                ax1.set_title('E_field', fontsize=10)
+            
+            ax1.set_title('E_field', fontsize=10)
+            
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
@@ -1413,19 +1285,26 @@ class Graphs_optimisation(QGroupBox):
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.moyenne*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
-                #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(myinput.pulse, axis = 1), axis = 0)))/np.log(10), 'b--', label='std spectre (log)')
-                #ax1.plot(myglobalparameters.freq,20*np.log(abs(np.std(np.fft.rfft(mydatacorrection.pulse, axis = 1), axis = 0)))/np.log(10), 'r--', label='corrected std spectre (log)')
+
+            if apply_window == 0:
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.freq_std/np.sqrt(n_traces)))/np.log(10), 'b--', label='Standard error (log)')
+            else:
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.freq_std_with_window/np.sqrt(n_traces)))/np.log(10), 'b--', label='Standard error (log)')
+            if not preview:
+                if apply_window == 0:
+                    ax1.plot(myglobalparameters.freq,20*np.log(abs(mydatacorrection.freq_std/np.sqrt(n_traces)))/np.log(10), 'r--', label='corrected Standard error (log)')
+                else:
+                    ax1.plot(myglobalparameters.freq,20*np.log(abs(mydatacorrection.freq_std_with_window/np.sqrt(n_traces)))/np.log(10), 'r--', label='corrected Standard error (log)')
+        
             ax1.legend()
             ax1.grid()
 
-            
+
         elif graph_option_2=='Pulse (E_field)':
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
-            if mode == "basic":
-                ax1.set_title('Pulse (E_field) ', fontsize=10)
-            else:
-                ax1.set_title('Pulse (E_field)', fontsize=10)
+            ax1.set_title('Pulse (E_field)', fontsize=10)
+            
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Amplitude',color=color)
@@ -1486,35 +1365,14 @@ class Graphs_optimisation(QGroupBox):
                 ax2.grid() 
                 ax3.grid()
                 ax4.grid()
-                
-        elif graph_option_2=='Errors':
-            self.figure.clf()
-            ax1 = self.figure.add_subplot(111)
-            
-            color = 'tab:red'
-            ax1.set_xlabel("Trace index")
-            ax1.set_ylabel('Error',color=color)
-            
-            if not preview:
-                if len(fopt_init)>1 and len(fopt)>1:
-                    ax1.plot(fopt_init, "b.-", label = "before correction (with initial guess)" )
-                    ax1.plot(ref_number, fopt_init[ref_number], "bv")
-                    ax1.annotate(" Reference", (ref_number,fopt_init[ref_number]))
-                    
-                    ax1.plot(fopt, "r.--", label = "after correction" )
-                    ax1.plot(ref_number, fopt[ref_number], "rv")
-                    ax1.annotate(" Reference", (ref_number,fopt[ref_number]))
-                    
-                ax1.grid()
             
                 
         elif graph_option_2=='Std Pulse (E_field)':
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
-            if mode == "basic":
-                ax1.set_title('Std Pulse (E_field) ', fontsize=10)
-            else:
-                ax1.set_title('Std Pulse (E_field)', fontsize=10)
+
+            ax1.set_title('Std Pulse (E_field) ', fontsize=10)
+            
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Standard deviation Pulse (E_field)',color=color)
@@ -1527,10 +1385,7 @@ class Graphs_optimisation(QGroupBox):
         elif graph_option_2 == 'Std E_field [dB]':
             self.figure.clf()
             ax1 = self.figure.add_subplot(111)
-            if mode == "basic":
-                ax1.set_title('Standard deviation E_field [dB] ', fontsize=10)
-            else:
-                ax1.set_title('Standard deviation E_field [dB]', fontsize=10)
+            ax1.set_title('Standard deviation E_field [dB]', fontsize=10)
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Std E_field [dB]',color=color)
@@ -1556,48 +1411,80 @@ class Graphs_optimisation(QGroupBox):
                 ax1.set_title('Phase', fontsize=10)
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
-            ax1.set_ylabel('Phase',color=color)
-            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows)))/myglobalparameters.freq, 'b-', label='mean phase')
+            ax1.set_ylabel('Phase (radians)',color=color)
+            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows))), 'b-', label='mean phase')
             if not preview:
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows)))/myglobalparameters.freq, 'g-', label='reference phase')
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows)))/myglobalparameters.freq, 'r-', label='corrected mean phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows))), 'g-', label='reference phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows))), 'r-', label='corrected mean phase')
             ax1.legend()
             ax1.grid()
         
-        elif graph_option_2 == "Covariance Pulse E field":
+        elif graph_option_2 == "Noise matrix":
             self.figure.clf()
             ax1 = self.figure.add_subplot(121)
             ax2 = self.figure.add_subplot(122)
             
-            ax1.set_title('Covariance matrix (log) - before correction', fontsize=10)
-            ax2.set_title('Covariance matrix (log) - after correction', fontsize=10)
-            
-            color = 'tab:red'
-            ax1.set_xlabel('Time [s]')
-            ax1.set_ylabel('Time [s]',color=color)
-            
-            ax2.set_xlabel('Time [s]')
-            ax2.set_ylabel('Time [s]',color=color)
-            temp = 10*np.log(abs(myinput_cov)**2)/np.log(10)
-            #mini = np.partition(temp.flatten(), 1000)[1000]
-            maxi = np.max(temp)
-            mini = np.min(temp)
-            im = ax1.imshow(temp, vmin=mini, vmax=maxi, cmap = sns.cm.rocket)
-            plt.colorbar(im, ax = ax1)            
-            if not preview:
-                temp = 10*np.log(abs(mydatacorrection_cov)**2)/np.log(10)
-                im = ax2.imshow(temp, vmin=mini, vmax=maxi, cmap = sns.cm.rocket)
-                plt.colorbar(im, ax = ax2)
+            if ncm is not None:
+                ax1.set_title('Noise convolution matrix', fontsize=10)
+                
+                color = 'tab:red'
+                ax1.set_xlabel('Time [s]')
+                ax1.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(ncm)), abs(np.max(ncm)))
+                im = ax1.imshow(ncm, vmin=-border, vmax = border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax1)    
+                
+                ax2.set_title('Noise convolution matrix inverse', fontsize=10)
+                
+                color = 'tab:red'
+                ax2.set_xlabel('Time [s]')
+                ax2.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(ncm_inverse)), abs(np.max(ncm_inverse)))
+                im = ax2.imshow(ncm_inverse, vmin=-border, vmax=border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax2)  
+                
+            elif mydatacorrection.covariance is not None:
+                ax1.set_title('Covariance matrix', fontsize=10)
+                
+                color = 'tab:red'
+                ax1.set_xlabel('Time [s]')
+                ax1.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(mydatacorrection.covariance)), abs(np.max(mydatacorrection.covariance)))
+                im = ax1.imshow(mydatacorrection.covariance, vmin=-border, vmax = border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax1) 
+                
+                ax2.set_title('Covariance matrix inverse', fontsize=10)
+                
+                color = 'tab:red'
+                ax2.set_xlabel('Time [s]')
+                ax2.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(mydatacorrection.covariance_inverse)), abs(np.max(mydatacorrection.covariance_inverse)))
+                im = ax2.imshow(mydatacorrection.covariance_inverse, vmin=-border, vmax = border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax2) 
+                    
+            elif myinput.covariance is not None:
+                ax1.set_title('Covariance matrix', fontsize=10)
+                
+                color = 'tab:red'
+                ax1.set_xlabel('Time [s]')
+                ax1.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(myinput.covariance)), abs(np.max(myinput.covariance)))
+                im = ax1.imshow(myinput.covariance, vmin=-border,  vmax = border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax1) 
 
+                ax2.set_title('Covariance matrix inverse', fontsize=10)
+                
+                color = 'tab:red'
+                ax2.set_xlabel('Time [s]')
+                ax2.set_ylabel('Time [s]',color=color)
+                border = max(abs(np.min(myinput.covariance_inverse)), abs(np.max(myinput.covariance_inverse)))
+                im = ax2.imshow(myinput.covariance_inverse, vmin=-border, vmax=border, cmap = "seismic",interpolation= "nearest")
+                plt.colorbar(im, ax = ax2) 
             
         self.figure.tight_layout()
         self.canvas.draw()
 
 
-    def E_field_graph(self):
-        global graph_option_2
-        graph_option_2='E_field'
-        self.controler.ploting_text3('Ploting E_field')
 
     def E_field_dB_graph(self):
         global graph_option_2
@@ -1608,82 +1495,21 @@ class Graphs_optimisation(QGroupBox):
         global graph_option_2
         graph_option_2='Pulse (E_field)'
         self.controler.ploting_text3('Ploting pulse E_field')
-
-    def Pulse_E_field_dB_graph(self):
-        global graph_option_2
-        graph_option_2='Pulse (E_field) [dB]'
-        self.controler.ploting_text3('Ploting pulse E_field [dB]')
-        
-
-    def E_field_residue_graph(self):
-        global graph_option_2
-        graph_option_2='E_field residue'
-        self.controler.ploting_text3('Ploting E_field residue')
-
-    def E_field_residue_dB_graph(self):
-        global graph_option_2
-        graph_option_2='E_field residue [dB]'
-        self.controler.ploting_text3('Ploting E_field residue [dB]')
-
-    def Pulse_E_field_residue_graph(self):
-        global graph_option_2
-        graph_option_2='Pulse (E_field) residue'
-        self.controler.ploting_text3('Ploting pulse E_field residue')
-
-    def Pulse_E_field_residue_dB_graph(self):
-        global graph_option_2
-        graph_option_2='Pulse (E_field) residue [dB]'
-        self.controler.ploting_text3('Ploting pulse E_field residue [dB]')
-    
-    def Delay_graph(self):
-        global graph_option_2
-        graph_option_2='Delay'
-        self.controler.ploting_text3('Ploting Delay histogram')
-        
-    def Delay_by_index_graph(self):
-        global graph_option_2
-        graph_option_2='Delay by indice'
-        self.controler.ploting_text3('Ploting Delay by index')
-        
-    def CoefA_graph(self):
-        global graph_option_2
-        graph_option_2='Coef a'
-        self.controler.ploting_text3('Ploting Coef a histogram')
-        
-    def CoefC_graph(self):
-        global graph_option_2
-        graph_option_2='Coef c'
-        self.controler.ploting_text3('Ploting Coef c histogram')
     
     def Phase_graph(self):
         global graph_option_2
         graph_option_2='Phase'
         self.controler.ploting_text3('Ploting Phase')
         
-    def Phase_std_graph(self):
-        global graph_option_2
-        graph_option_2='Std Phase'
-        self.controler.ploting_text3('Ploting Std Phase')
-        
     def Correction_param_graph(self):
         global graph_option_2
         graph_option_2='Correction parameters'
         self.controler.ploting_text3('Ploting Correction parameters')
         
-    def Correction_param_graph2(self):
-        global graph_option_2
-        graph_option_2='Correction parameters2'
-        self.controler.ploting_text3('Ploting Correction parameters')    
-        
-    def Errors(self):
-        global graph_option_2
-        graph_option_2='Errors'
-        self.controler.ploting_text3('Ploting Errors')
-        
     def Covariance_Pulse(self):
         global graph_option_2
-        graph_option_2='Covariance Pulse E field'
-        self.controler.ploting_text3('Ploting Covariance')  
+        graph_option_2='Noise matrix'
+        self.controler.ploting_text3('Ploting Covariance\n   Reminder - the matrix must be saved for its computation (Ledoit-Wolf shrinkage)')  
         
     def Pulse_E_field_std_graph(self):
         global graph_option_2
@@ -1697,15 +1523,15 @@ class Graphs_optimisation(QGroupBox):
 
     def refresh(self):
         try:
-            self.draw_graph_init(self.controler.myinput, self.controler.myreferencedata, self.controler.reference_number, 
+            self.draw_graph_init(self.controler.myinput, self.controler.myreferencedata, self.controler.ncm, self.controler.ncm_inverse, 
+                                 self.controler.reference_number, 
                                  self.controler.mydatacorrection, self.controler.delay_correction, self.controler.dilatation_correction,
                                  self.controler.leftover_correction,
-                                 self.controler.myinput_cov, self.controler.mydatacorrection_cov,
                                      self.controler.myglobalparameters,self.controler.fopt, self.controler.fopt_init,
                                       self.controler.mode, preview)
                 
         except Exception as e:
-            print(e)
+            pass
         """except:
             print("There is a refresh problem")
             pass"""
@@ -1743,9 +1569,10 @@ def main():
         sys.exit(1) 
     sys.excepthook = exception_hook 
     
-    app = QApplication([])
+    app = QApplication(sys.argv)
     controler = Controler()
     win = MainWindow(controler)
+    qApp.setApplicationName("Correct@TDS")
     #controler.init()
     win.show()
     sys.exit(app.exec_())
