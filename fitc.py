@@ -621,7 +621,7 @@ class Controler(ControlerBase):
                             
                             
                         if file == 5:
-                            if not self.mydatacorrection.covariance:
+                            if self.mydatacorrection.covariance is None:
                                 if self.path_data_ref:
                                     transfer_function = TDS.torch_irfft(TDS.torch_rfft(self.mydatacorrection.moyenne[:self.nsample])/TDS.torch_rfft(self.myinput_without_sample.moyenne))
                             
@@ -674,8 +674,9 @@ class Controler(ControlerBase):
                                     
                             else:
                                 hdf =  h5py.File(os.path.join(path,filename),"w")
-                                self.mydatacorrection.covariance_inverse = cov.precision_*self.data.numberOfTrace
-                                cov = []
+                                if self.mydatacorrection.covariance_inverse is None:
+                                    self.mydatacorrection.covariance_inverse = cov.precision_*self.data.numberOfTrace
+                                    cov = []
                                 dataset = hdf.create_dataset("covariance_inverse", data = self.mydatacorrection.covariance_inverse)
                                 dataset.attrs["CITATION"] = citation
                                 if self.data.timestamp:
@@ -741,7 +742,7 @@ class Controler(ControlerBase):
                             np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)
                             
                         if file == 5:
-                            if not self.myinput.covariance:
+                            if self.myinput.covariance is None:
                                 if self.path_data_ref:
                                     transfer_function = TDS.torch_irfft(TDS.torch_rfft(self.myinput.moyenne[:self.nsample])/TDS.torch_rfft(self.myinput_without_sample.moyenne))
                             
@@ -794,8 +795,9 @@ class Controler(ControlerBase):
                                     
                             else:
                                 hdf =  h5py.File(os.path.join(path,filename),"w")
-                                self.myinput.covariance_inverse = cov.precision_*self.data.numberOfTrace
-                                cov = []
+                                if self.myinput.covariance_inverse is None:
+                                    self.myinput.covariance_inverse = cov.precision_*self.data.numberOfTrace
+                                    cov = []
                                 dataset = hdf.create_dataset("covariance_inverse", data = self.myinput.covariance_inverse)
                                 dataset.attrs["CITATION"] = citation
                                 if self.data.timestamp:
