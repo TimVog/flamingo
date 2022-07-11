@@ -18,6 +18,8 @@
 	```
 	pip install numba
 	```	
+- Install pyOpt from https://github.com/madebr/pyOpt (optional)
+
 - To apply Tuckey window with alpha= 0.05, modify "apply_window = 0" to "apply_window = 1" in interface.py
 	
 - To run Correct@TDS, write in the command line:
