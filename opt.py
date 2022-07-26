@@ -597,7 +597,7 @@ if fit_periodic_sampling:
     delta_nu = myglobalparameters.freq[-1]/(len(myglobalparameters.freq)-1) # Hz
     index_nu=int(nu/delta_nu)
     
-    maxval_ps = np.array([dt/100, 12*2*np.pi*1e12, np.pi])
+    maxval_ps = np.array([dt/10, 12*2*np.pi*1e12, np.pi])
     minval_ps = np.array([0, 6*2*np.pi*1e12, -np.pi])
     guess_ps = xopt_ps
     
