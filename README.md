@@ -43,7 +43,7 @@
 - To install the package, write in the command line :
 
 	```
-	pip install Correct_TDS_Sami
+	pip install Correct-TDS-Sami
 	```
 - To run Correct@TDS, write in the command line:
 
