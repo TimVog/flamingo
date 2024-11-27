@@ -30,7 +30,7 @@
 - The gui can freeze while computing, it's normal, it's still in development
 
 
-## With the pip install package :
+## With the pip install package (not yet usable) :
 
 - Install pyOpt from https://github.com/madebr/pyOpt (optional)
 
