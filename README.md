@@ -45,7 +45,7 @@
 	```
 	pip install Correct-TDS
 	```
-- To run Correct@TDS, write in the command line:
+- To run Correct@TDS, write in the command line :
 
 	```
  	Correct-TDS-interface
