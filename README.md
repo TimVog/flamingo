@@ -30,7 +30,7 @@
 - The gui can freeze while computing, it's normal, it's still in development
 
 
-## With the pip install package (not yet usable) :
+## With the pip install package :
 
 - Install pyOpt from https://github.com/madebr/pyOpt (optional)
 
@@ -48,8 +48,6 @@
 - To run Correct@TDS, write in the command line:
 
 	```
- 	python interface.py
+ 	Correct-TDS-interface
 	```
-- Note : you need to set the correct path to open the interface
-
 - The gui can freeze while computing, it's normal, it's still in development
