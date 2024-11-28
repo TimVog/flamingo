@@ -8,6 +8,12 @@
 
 import os
 import sys
+# Ajouter le dossier du script en cours au sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+import fitf as TDS
+from fitc import Controler
+import constants as csts
 import subprocess
 import numpy as np
 from PyQt5.QtCore import *
@@ -20,13 +26,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import sip
 import shutil
-import fitf as TDS
 import h5py
 import time
-from fitc import Controler
 from scipy import signal
 from pathlib import Path as path_
-import constants as csts
 import multiprocessing
 from datetime import datetime
 

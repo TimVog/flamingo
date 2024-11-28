@@ -6,11 +6,14 @@
 # Standard Python modules
 # =============================================================================
 import os, sys
+# Ajouter le dossier du script en cours au sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+import fitf as TDS
 import pickle
 import subprocess
 import numpy as np
 import h5py
-import fitf as TDS
 import warnings
 import multiprocessing # For the break button
 from scipy import signal
