@@ -710,13 +710,13 @@ class Controler(ControlerBase):
                                     
                                 elif cov_algo == 3:
                                     if self.path_data_ref:
-                                        model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = False)
+                                        model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = True)
                                         cov_with_ref = model.fit([np.convolve(transfer_function, self.myinput_without_sample.pulse[i])[:self.nsample] for i in range(self.data.numberOfTrace) ])
                                         self.myinput_without_sample.covariance =  cov_with_ref.covariance_ /self.data.numberOfTrace
                                         alpha_myinput_without_sample = cov_with_ref.alpha_
                                         cov_with_ref = []
                                         
-                                    model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = False)
+                                    model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = True)
                                     cov = model.fit(np.array(self.mydatacorrection.pulse)[:,:self.nsample])
                                     self.mydatacorrection.covariance = cov.covariance_ /self.data.numberOfTrace
                                     alpha_mydatacorrection = cov.alpha_
@@ -831,13 +831,13 @@ class Controler(ControlerBase):
                                     
                                 elif cov_algo == 3:
                                     if self.path_data_ref:
-                                        model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = False)
+                                        model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = True)
                                         cov_with_ref = model.fit([np.convolve(transfer_function, self.myinput_without_sample.pulse[i])[:self.nsample] for i in range(self.data.numberOfTrace) ])
                                         self.myinput_without_sample.covariance =  cov_with_ref.covariance_ /self.data.numberOfTrace
                                         alpha_myinput_without_sample = cov_with_ref.alpha_
                                         cov_with_ref = []
                                         
-                                    model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = False)
+                                    model = GraphicalLassoCV(cv = 3, alphas=2, n_refinements=10, max_iter = 100, mode = "cd", n_jobs=1, tol = 1e-4, verbose = True)
                                     cov = model.fit(np.array(self.myinput.pulse)[:,:self.nsample])
                                     self.myinput.covariance = cov.covariance_ /self.data.numberOfTrace
                                     alpha_myinput = cov.alpha_
