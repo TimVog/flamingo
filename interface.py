@@ -8,12 +8,9 @@
 
 import os
 import sys
-# Ajouter le dossier du script en cours au sys.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
-import fitf as TDS
-from fitc import Controler
-import constants as csts
+from Correct_TDS import fitf as TDS
+from Correct_TDS.fitc import Controler
+from Correct_TDS import constants as csts
 import subprocess
 import numpy as np
 from PyQt5.QtCore import *
