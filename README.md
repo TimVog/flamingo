@@ -54,4 +54,4 @@
 
 ## Usage
 
-A THz software that performs statistical error analysis on .he files obtained with TeraHertz Time Domain Spectroscopy (THz-TDS).
+A THz software that performs statistical analysis and error correction on .he files obtained with TeraHertz Time Domain Spectroscopy (THz-TDS).
