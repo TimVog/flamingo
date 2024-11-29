@@ -8,9 +8,9 @@
 
 import os
 import sys
-from Correct_TDS import fitf as TDS
-from Correct_TDS.fitc import Controler
-from Correct_TDS import constants as csts
+import fitf as TDS
+from fitc import Controler
+import constants as csts
 import subprocess
 import numpy as np
 from PyQt5.QtCore import *

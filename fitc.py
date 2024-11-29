@@ -6,7 +6,7 @@
 # Standard Python modules
 # =============================================================================
 import os, sys
-from Correct_TDS import fitf as TDS
+import fitf as TDS
 import pickle
 import subprocess
 import numpy as np
@@ -374,7 +374,7 @@ class Controler(ControlerBase):
         self.optim.interrupt=False
         self.optim.optimize(nb_proc)  
    
-            
+   
         # #Creating an optimisation process
         # self.optimization_process = multiprocessing.Process(target=self.optim.optimize, args=(nb_proc,),daemon=True)
         # self.optimization_process.start()
