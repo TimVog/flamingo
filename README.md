@@ -51,3 +51,7 @@
  	Correct-TDS-interface
 	```
 - The gui can freeze while computing, it's normal, it's still in development
+
+## Usage
+
+A THz software that performs statistical error analysis on .he files obtained with TeraHertz Time Domain Spectroscopy (THz-TDS).
