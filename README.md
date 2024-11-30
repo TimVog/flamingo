@@ -1,4 +1,31 @@
-# Correct-TDS-in-development
+# Correct-TDS
+
+
+
+
+## With the pip install package :
+
+- Install pyOpt from https://github.com/madebr/pyOpt (optional)
+
+- Install anaconda (https://docs.anaconda.com/anaconda/install/index.html)
+
+- Create an environment
+
+- Open the environment terminal
+
+- To install the package, write in the command line :
+
+	```
+	pip install Correct-TDS
+	```
+- To run Correct@TDS, write in the command line :
+
+	```
+ 	Correct-TDS-interface
+	```
+- The gui can freeze while computing, it's normal, it's still in development
+
+## Manual instalation
 
 - Install anaconda (https://docs.anaconda.com/anaconda/install/index.html)
 
@@ -26,29 +53,6 @@
 
 	```
 	python interface.py
-	```
-- The gui can freeze while computing, it's normal, it's still in development
-
-
-## With the pip install package :
-
-- Install pyOpt from https://github.com/madebr/pyOpt (optional)
-
-- Install anaconda (https://docs.anaconda.com/anaconda/install/index.html)
-
-- Create an environment
-
-- Open the environment terminal
-
-- To install the package, write in the command line :
-
-	```
-	pip install Correct-TDS
-	```
-- To run Correct@TDS, write in the command line :
-
-	```
- 	Correct-TDS-interface
 	```
 - The gui can freeze while computing, it's normal, it's still in development
 
