@@ -26,6 +26,10 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Check if dist/ exists
+        run: |
+          ls -l dist/
+
       - name: Clean previous build
         run: |
           rm -rf dist/
