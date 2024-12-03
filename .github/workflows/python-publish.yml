@@ -31,11 +31,6 @@ jobs:
           echo "Cleaning previous builds..."
           rm -rf dist/
 
-      - name: Check if dist/ exists
-        run: |
-          echo "Checking dist/ directory..."
-          ls -l dist/
-
       - name: Build release distributions
         run: |
           echo "Building distributions..."
