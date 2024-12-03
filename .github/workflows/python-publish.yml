@@ -26,17 +26,19 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Clean previous builds
+        run: |
+          echo "Cleaning previous builds..."
+          rm -rf dist/
+
       - name: Check if dist/ exists
         run: |
+          echo "Checking dist/ directory..."
           ls -l dist/
 
-      - name: Clean previous build
-        run: |
-          rm -rf dist/
-      
       - name: Build release distributions
         run: |
-          # NOTE: put your own distribution build steps here.
+          echo "Building distributions..."
           python -m pip install build
           python -m build
 
@@ -51,17 +53,11 @@ jobs:
     needs:
       - release-build
     permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
 
     environment:
       name: pypi
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
       url: https://pypi.org/p/correct-tds
-      #
-      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
-      # ALTERNATIVE: exactly, uncomment the following line instead:
-      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
 
     steps:
       - name: Retrieve release distributions
@@ -75,7 +71,5 @@ jobs:
         with:
           packages-dir: dist/
         env:
-          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}  # Ajouter le nom d'utilisateur PyPI ici
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}  # Ajouter le jeton PyPI ici
-
-          packages-dir: dist/
+          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
