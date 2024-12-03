@@ -26,10 +26,10 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Clean previous builds
+      - name: Clean previous build
         run: |
           rm -rf dist/
-
+      
       - name: Build release distributions
         run: |
           # NOTE: put your own distribution build steps here.
