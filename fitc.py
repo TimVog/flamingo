@@ -6,6 +6,7 @@
 # Standard Python modules
 # =============================================================================
 import os, sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import fitf as TDS
 import pickle
 import subprocess
@@ -16,6 +17,7 @@ import multiprocessing # For the break button
 from scipy import signal
 from sklearn.covariance import GraphicalLassoCV, LedoitWolf, OAS
 from pathlib import Path as path_
+from threading import Thread
 
 import numba #pour inverser rapidement
 @numba.jit
@@ -371,8 +373,15 @@ class Controler(ControlerBase):
         output=""
         error=""
         returncode=0
-        self.optim.interrupt=False
+        self.optim.interrupt=False        
+        print("\n Start of optimization")
         self.optim.optimize(nb_proc)  
+        
+        # # Creating an optimisation process
+        # print("\n Background opt begins")
+        
+        # background_opt = Thread(target=self.optim.optimize(nb_proc), daemon = True )
+        # background_opt.start()
    
    
         # #Creating an optimisation process

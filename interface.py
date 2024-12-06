@@ -6,8 +6,8 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 
-import os
-import sys
+import os, sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import fitf as TDS
 from fitc import Controler
 import constants as csts
@@ -29,6 +29,8 @@ from scipy import signal
 from pathlib import Path as path_
 import multiprocessing
 from datetime import datetime
+
+from threading import Thread
 
 plt.rcParams.update({'font.size': 13})
 
@@ -535,12 +537,12 @@ class InitParamWidget(QWidget):
             self.dialog_match.ui.show_info_noref_messagebox()
     
     # def on_click_print(self):
-        # print(self.LFfilter_choice.currentIndex())
-        # print(self.HFfilter_choice.currentIndex())
-        # print(self.start_box.text())
-        # print(self.end_box.text())
-        # print(self.sharp_box.text())
-        # print(self.options_super.currentIndex())
+    #     print(self.LFfilter_choice.currentIndex())
+    #     print(self.HFfilter_choice.currentIndex())
+    #     print(self.start_box.text())
+    #     print(self.end_box.text())
+    #     print(self.sharp_box.text())
+    #     print(self.options_super.currentIndex())
         
 
     def on_click(self,data_,ref_):
@@ -1328,6 +1330,8 @@ class Optimization_choices(QGroupBox):
                 nb_proc=1
             if self.controler.optim.vars_temp_file_5 != None:
                 self.controler.begin_optimization(nb_proc)
+                # background_opt = Thread(target=self.controler.begin_optimization(nb_proc), daemon = True )
+                # background_opt.start()
                 graph_option_2='Pulse (E_field)'
             else:
                 self.controler.no_temp_file_5()
