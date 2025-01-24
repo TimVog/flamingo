@@ -1614,15 +1614,15 @@ class Saving_parameters(QGroupBox):
                 else:
                     print("Something went wrong")          
             # print(path.joinpath(path_(filename).name))
-            if sys.platform =="linux" or sys.platform=="darwin":
-                subprocess.run(f"cp {filename} {path.joinpath(path_(filename).name)}", shell=True)
-            elif sys.platform =="win32" or sys.platform=="cygwin":
-                subprocess.run(f"copy {path_(filename)} {path.joinpath(path_(filename).name)}", shell=True)
-            if ref != None:
-                if sys.platform=="linux" or sys.platform=="darwin":
-                    subprocess.run(f"cp {ref} {path.joinpath(path_(ref).name)}", shell=True)
-                elif sys.platform=="win32" or sys.platform=="cygwin":
-                    subprocess.run(f"copy {path_(ref)} {path.joinpath(path_(ref).name)}", shell=True)
+#            if sys.platform =="linux" or sys.platform=="darwin":
+#                subprocess.run(f"cp {filename} {path.joinpath(path_(filename).name)}", shell=True)
+#            elif sys.platform =="win32" or sys.platform=="cygwin":
+#                subprocess.run(f"copy {path_(filename)} {path.joinpath(path_(filename).name)}", shell=True)
+#            if ref != None:
+#                if sys.platform=="linux" or sys.platform=="darwin":
+#                    subprocess.run(f"cp {ref} {path.joinpath(path_(ref).name)}", shell=True)
+#                elif sys.platform=="win32" or sys.platform=="cygwin":
+#                    subprocess.run(f"copy {path_(ref)} {path.joinpath(path_(ref).name)}", shell=True)
                     
         else:
             self.controler.refreshAll3("Please enter initialization data first")
@@ -1765,7 +1765,7 @@ class Saving_parameters(QGroupBox):
     def save_traces_batch(self,filename):
         global preview
         if self.controler.initialised:
-            name = f"corrected_time_traces_{path_(filename).stem}.txt"
+            name = f"corrected_time_traces_{path_(filename).stem}.h5"
             # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
             
             if csts.modesuper:
@@ -1776,7 +1776,7 @@ class Saving_parameters(QGroupBox):
                     path_(path).mkdir()
             
             else:
-                path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
+                path = path_(filename).parent#.joinpath(f"{path_(filename).stem}")
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
             
@@ -1808,7 +1808,7 @@ class Saving_parameters(QGroupBox):
     def save_cov_batch(self,filename):
         global preview
         if self.controler.initialised:
-            name = f"noise_matrix_{path_(filename).stem}.txt"
+            name = f"noise_matrix_{path_(filename).stem}.h5"
             # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
             
             if csts.modesuper:
