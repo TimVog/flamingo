@@ -124,7 +124,9 @@ class myfitdata:
         self.myinputdata=None
         self.myglobalparameters=None
         self.dt=None
-        self.vars_temp_file_1_ini = None
+        self.fit_dilatation=None
+        self.fit_leftover_noise=None
+        self.fit_delay=None
         
         
         
@@ -132,10 +134,6 @@ class myfitdata:
         
     def fit_input(self, myinputdata, x):
         
-
-        fit_dilatation=self.vars_temp_file_1_ini[3]
-        fit_leftover_noise=self.vars_temp_file_1_ini[15]
-        fit_delay=self.vars_temp_file_1_ini[8]
         
         dt=self.myglobalparameters.t.item(2)-self.myglobalparameters.t.item(1)   ## Sample rate
 
@@ -147,16 +145,16 @@ class myfitdata:
         
         coef = np.zeros(2) #[a,c]
                 
-        if fit_delay:
+        if self.fit_delay:
             delay_guess = x[0]
             
-        if fit_dilatation:
-            if fit_delay:
+        if self.fit_dilatation:
+            if self.fit_delay:
                 dilatation_coefguess = x[1:3]
             else:
                 dilatation_coefguess = x[0:2]
             dilatation_coefguess[1] = 0
-        if fit_leftover_noise:
+        if self.fit_leftover_noise:
                 leftover_guess = x[-2:]
 
         coef[0] = leftover_guess[0] #a
@@ -241,16 +239,46 @@ class Callback_annealing(object):
 class Optimization():
     def __init__(self):
         
-        #Stocking all the variables which were in temp files, in majority used to optimize
-        self.vars_temp_file_1_ini = None
-        self.vars_temp_file_2_datacorrection = None
-        self.vars_temp_file_2_fopt = None
-        self.vars_temp_file_3 = None
-        self.vars_temp_file_5 = None
-        self.vars_temp_file_6_data = None
-        self.vars_temp_file_6_ref = None
-        self.vars_temp_file_7_globalparameters = None
-        self.vars_temp_file_7_apply_window = None
+        #Storing all the variables which were in temp files, in majority used to optimize
+        #self.vars_temp_file_1_ini = None
+        #[path_data, path_data_ref, reference_number, fit_dilatation, dilatation_limit, dilatationmax_guess, 
+        # freqWindow, timeWindow, fit_delay, delaymax_guess, delay_limit, mode, nsample,
+        # fit_periodic_sampling, periodic_sampling_freq_limit, fit_leftover_noise, leftcoef_guess, leftcoef_limit]
+        
+
+        self.reference_number = None
+        self.fit_dilatation = None
+        self.dilatation_limit = None
+        self.dilatationmax_guess = None
+        self.fit_delay = None
+        self.delaymax_guess = None
+        self.delay_limit = None
+        self.nsample = None
+        self.fit_periodic_sampling = None
+        self.periodic_sampling_freq_limit = None
+        self.fit_leftover_noise = None
+        self.leftcoef_guess = None
+        self.leftcoef_limit = None
+        
+        
+        
+        
+        
+        self.datacorrection = None
+        self.fopt = None
+        self.result = None
+        
+        
+        self.algo = None
+        self.swarmsize = None
+        self.maxiter = None
+        self.maxiter_ps = None
+        
+#        self.vars_temp_file_5 = None
+        self.data = None
+        self.ref = None
+        self.globalparameters = None
+        self.apply_window = None
         
         self.myreferencedata=None
         self.minval=None
@@ -264,10 +292,10 @@ class Optimization():
         
         
     def errorchoice(self):
-        nsample=self.vars_temp_file_1_ini[12]
-        fit_dilatation=self.vars_temp_file_1_ini[3]
-        fit_leftover_noise=self.vars_temp_file_1_ini[15]
-        fit_delay=self.vars_temp_file_1_ini[8]
+        nsample=self.nsample
+        fit_dilatation=self.fit_dilatation
+        fit_leftover_noise=self.fit_leftover_noise
+        fit_delay=self.fit_delay
         
         def monerreur(x):
             
@@ -308,11 +336,11 @@ class Optimization():
         
 
 
-    def fit_input(self, myinputdata, x):
+    def fit_input(self, x):
         
-        fit_dilatation=self.vars_temp_file_1_ini[3]
-        fit_leftover_noise=self.vars_temp_file_1_ini[15]
-        fit_delay=self.vars_temp_file_1_ini[8]
+        fit_dilatation=self.fit_dilatation
+        fit_leftover_noise=self.fit_leftover_noise
+        fit_delay=self.fit_delay
         
         leftover_guess = np.zeros(2)
         delay_guess = 0
@@ -344,15 +372,6 @@ class Optimization():
 
         return myinputdatacorrected
     
-    # =============================================================================
-    # def errorchoice_pyOpt(): 
-    #     def objfunc(x):  ## Function used in the Optimization function from pyOpt. For more details see http://www.pyopt.org/quickguide/quickguide.html
-    #         optim = Optimization()
-    #         monerreur = optim.errorchoice
-    #         f = monerreur(x)
-    #         fail = 0
-    #         return f, 1, fail
-    #     return objfunc
 
 
     # =============================================================================
@@ -361,18 +380,25 @@ class Optimization():
         # =============================================================================
         # We load the model choices
         # =============================================================================
-        [path_data, path_data_ref, reference_number, fit_dilatation, dilatation_limit, dilatationmax_guess, 
-         freqWindow, timeWindow, fit_delay, delaymax_guess, delay_limit, mode, nsample,
-         fit_periodic_sampling, periodic_sampling_freq_limit, fit_leftover_noise, leftcoef_guess, leftcoef_limit]=self.vars_temp_file_1_ini
-
-        data = self.vars_temp_file_6_data
+        reference_number = self.reference_number
+        fit_dilatation = self.fit_dilatation
+        dilatation_limit = self.dilatation_limit
+        dilatationmax_guess = self.dilatationmax_guess
+        fit_delay = self.fit_delay
+        delaymax_guess = self.delaymax_guess
+        delay_limit = self.delay_limit
+        fit_periodic_sampling = self.fit_periodic_sampling
+        periodic_sampling_freq_limit = self.periodic_sampling_freq_limit
+        fit_leftover_noise = self.fit_leftover_noise
+        leftcoef_guess = self.leftcoef_guess
+        leftcoef_limit = self.leftcoef_limit
         
-        self.myreferencedata=self.vars_temp_file_6_ref
-
-        self.myglobalparameters = globalparameters()
+        data = self.data
         
-        self.myglobalparameters = self.vars_temp_file_7_globalparameters
-        apply_window = self.vars_temp_file_7_apply_window
+        self.myreferencedata=self.ref
+        
+        self.myglobalparameters = self.globalparameters
+        apply_window = self.apply_window
         nsamplenotreal=len(self.myglobalparameters.t)
 
         if apply_window == 1:
@@ -380,8 +406,10 @@ class Optimization():
 
 
         out_dir="temp"
-        [algo,swarmsize,maxiter, maxiter_ps]=self.vars_temp_file_5
-
+        algo = self.algo
+        swarmsize = self.swarmsize
+        maxiter = self.maxiter
+        maxiter_ps = self.maxiter_ps
 
 
         # Load fields data
@@ -471,7 +499,6 @@ class Optimization():
             ub_ps=np.ones(len(guess_ps))
             
             def error_periodic(x):
-                # x = A, v, phi
                 x = x*(maxval_ps-minval_ps)+minval_ps
                 
                 ct = x[0]*np.cos(x[1]*self.myglobalparameters.t + x[2])    # s 
@@ -479,10 +506,6 @@ class Optimization():
                 
                 error = sum(abs((rfft(corrected)[index_nu:])))
                 
-                #error = 0 # Doesn't work , why?
-                #for i in range(index_nu,len(myglobalparameters.freq)):
-                  #   error += abs(np.real(np.exp(-j*np.angle(np.fft.rfft(corrected)[i-index_nu])) * np.fft.rfft(corrected)[i]))
-
                 return error
             
             res_ps = optimize.dual_annealing(error_periodic, x0 = x0_ps, maxiter = maxiter_ps, bounds=list(zip(lb_ps, ub_ps)))
@@ -499,16 +522,12 @@ class Optimization():
                 # Checking if break button is pressed
                 if self.interrupt and self.optimization_process.is_alive():
                     self.optimization_process.terminate()
-                    # print("Optimization process terminated")
-            
-                # print("Time trace "+str(trace))
+
                 self.myinputdata=mydata(data.pulse[trace])    ## We create a variable containing the data related to the measured pulse
-                # data.pulse[trace] = [] # why there is this line of code ?
+
                 
                 monerreur = self.errorchoice()
-                
-                # optim = Optimization()
-                # objfunc = optim.errorchoice_pyOpt
+
                 
                 if fit_leftover_noise:
                     if fit_dilatation:
@@ -524,61 +543,12 @@ class Optimization():
                 
                 if trace == reference_number: # on part pas de 0.5 car il diverge vu que c'est la ref elle meme
                     ref_x0= [0.5 - 0.1**exposant_ref]*len(totVariablesName)
-                    # on print pas c
-                    # if fit_leftover_noise:  
-                    #     print('guess')
-                    #     print((np.array(ref_x0)*(self.maxval-self.minval)+self.minval)[:-1])
-                    #     print('x0')
-                    #     print(ref_x0[:-1])
-                    # else:
-                    #     print('guess')
-                    #     print(np.array(ref_x0)*(self.maxval-self.minval)+self.minval)
-                    #     print('x0')
-                    #     print(ref_x0)
-                    # print('errorguess')
                     fopt_init.append(monerreur(ref_x0))
-                    # print(fopt_init[-1])
                 else:
                     guess= x0*(self.maxval-self.minval)+self.minval
-                    # on print seulemnt delay et a , pas c
-                    # if fit_leftover_noise:
-                    #     print('guess')
-                    #     print(guess[:-1])
-                    #     print('x0')
-                    #     print(x0[:-1])
-                    # else:
-                    #     print('guess')
-                    #     print(guess)
-                    #     print('x0')
-                    #     print(x0)
-                    # print('errorguess')
                     fopt_init.append(monerreur(x0))
-                    # print(fopt_init[-1])
 
-                
-                
-                # ## Optimization dans le cas PyOpt
-                # if algo in [1,2,3,4]:
-                #     opt_prob = Optimization('Dielectric modeling based on TDS pulse fitting',objfunc)
-                #     icount = 0
-                #     for nom,varvalue in myVariablesDictionary.items():
-                #         #if varvalue>=0:
-                #         if trace == reference_number:
-                #             opt_prob.addVar(nom,'c',lower = 0,upper = 1,
-                #                     value = ref_x0[icount] #normalisation
-                #                     )
-                #         else:
-                #             opt_prob.addVar(nom,'c',lower = 0,upper = 1,
-                #                     value = (varvalue-minDict.get(nom))/(maxDict.get(nom)-minDict.get(nom)) #normalisation
-                #                     )
-                #         icount+=1
-                #         #else:
-                #         #    opt_prob.addVar(nom,'c',lower = 0,upper = 1,
-                #         #                value = -(varvalue-minDict.get(nom))/(maxDict.get(nom)-minDict.get(nom)) #normalisation
-                #           #               )    
-                #     opt_prob.addObj('f')
-                #     #opt_prob.addCon('g1','i') #possibility to add constraints
-                #     #opt_prob.addCon('g2','i')
+
                 
                 
                 # =============================================================================
@@ -590,7 +560,6 @@ class Optimization():
                     start = time.process_time()
                     xopt,fopt=pso(monerreur,lb,up,swarmsize=swarmsize,minfunc=1e-18,minstep=1e-8,debug=1,phip=0.5,phig=0.5,maxiter=maxiter) ## 'monerreur' function that we want to minimize, 'lb' and 'up' bounds of the problem
                     elapsed_time = time.process_time()-start
-                    # print("Time taken by the optimization:",elapsed_time)
                     
                 if algo == 5:
                     start = time.process_time()
@@ -602,7 +571,6 @@ class Optimization():
                     elapsed_time = time.process_time()-start
                     xopt = res.x
                     fopt = res.fun
-                    # print(res.message,"\nTime taken by the optimization:",elapsed_time)
                     
                 if algo == 6:
                     start = time.process_time()
@@ -614,7 +582,6 @@ class Optimization():
                     elapsed_time = time.process_time()-start
                     xopt = res.x
                     fopt = res.fun
-                    # print(res.message,"\nTime taken by the optimization:",elapsed_time)
                     
                 if algo==7:
                     start = time.process_time()
@@ -623,55 +590,12 @@ class Optimization():
                     elapsed_time = time.process_time()-start
                     xopt = res.x
                     fopt = res.fun
-                    # print(res.message,"\nTime taken by the optimization:",elapsed_time)
                 
                 
-                
-                # =============================================================================
-                # solving the problem with pyOpt
-                # =============================================================================
-                
-                
-                # if  (algo==1)|(algo == 2):
-                #     start = time.process_time()
-                #     [fopt, xopt, inform] = optimALPSO(opt_prob, swarmsize, maxiter,algo,out_opt_full_info_filename)
-                #     elapsed_time = time.process_time()-start
-                #     print(inform,"\nTime taken by the optimization:",elapsed_time)
-                    
-                # if algo ==3:
-                #         try:
-                #             start = time.process_time()
-                #             [fopt, xopt, inform] = optimSLSQP(opt_prob,maxiter)
-                #             elapsed_time = time.process_time()-start
-                #             print(inform,"\nTime taken by the optimization:",elapsed_time)
-                #         except Exception as e:
-                #             print(e)
-                
-                # if algo ==4:
-                #         try:
-                #             start = time.process_time()
-                #             [fopt, xopt, inform] = optimSLSQPpar(opt_prob,maxiter)
-                #             elapsed_time = time.process_time()-start
-                #             print(inform,"\nTime taken by the optimization:",elapsed_time)
-                #         except Exception as e:
-                #             print(e)
-                  
-                # if fit_leftover_noise and not fit_dilatation: 
-                #     # si on corrige la dilatation, vaut mieux repartir de 0 sinon divergence
-                #     if fit_delay:
-                #         x0[1] = xopt[1] #coef a on evite de commencer l'init à 0 car parfois probleme de convergence
-                #     else:
-                #         x0[0] = xopt[0]  # coef a  
-                # =============================================================================
                 
                 if myrank == 0:
                     xopt = xopt*(self.maxval-self.minval)+self.minval  #denormalize
-                    # print(f'The best error was: \t{fopt}')
-                    # if(fit_leftover_noise):
-                    #     print(f'the best parameters were: \t{xopt[:-1]}\n')
-                    # else:
-                    #     print(f'the best parameters were: \t{xopt}\n')
-                    # =========================================================================
+
                     
                     
                     myfitteddata=myfitdata(self.myinputdata, xopt)
@@ -682,21 +606,15 @@ class Optimization():
                     # saving the results
                     # ========================================================================
             
-                    # result_optimization=[]
-                    # result_optimization.append([xopt,fopt]) # instead of result_optimization=[xopt,fopt]
                     result_optimization=[xopt,fopt]
                     if(trace == 0):   # write first time
-                        # with open(os.path.join("temp",'temp_file_3.bin'),'wb') as f:
-                        #     pickle.dump(result_optimization,f,pickle.HIGHEST_PROTOCOL)
                         result_optimization = [item.tolist() if isinstance(item, np.ndarray) else item for item in result_optimization]
                         result_optimization = [result_optimization]
-                        self.vars_temp_file_3 = result_optimization
+                        self.result = result_optimization
 
                     else:  #append after first time
-                        # with open(os.path.join("temp",'temp_file_3.bin'),'ab') as f:
-                        #     pickle.dump(result_optimization,f,pickle.HIGHEST_PROTOCOL)
                         result_optimization = [item.tolist() if isinstance(item, np.ndarray) else item for item in result_optimization]
-                        self.vars_temp_file_3.append(result_optimization) # use .append instead of =
+                        self.result.append(result_optimization) # use .append instead of =
 
 
 
@@ -712,12 +630,9 @@ class Optimization():
                 datacorrection.freq_std = np.std(rfft(datacorrection.pulse, axis = 1),axis = 0)
                 if apply_window == 1:
                     datacorrection.freq_std_with_window = np.std(rfft(datacorrection.pulse*windows, axis = 1),axis = 0)
-                #SAVE the result in binary for other modules
-                # with open(os.path.join("temp",'temp_file_2.bin'),'wb') as f:
-                #     pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
-                #     pickle.dump(fopt_init,f,pickle.HIGHEST_PROTOCOL)
-                self.vars_temp_file_2_datacorrection = datacorrection
-                self.vars_temp_file_2_fopt=fopt_init
+
+                self.datacorrection = datacorrection
+                self.fopt=fopt_init
                 
             
                     
@@ -756,20 +671,12 @@ class Optimization():
                 
                 error = sum(abs((rfft(corrected)[index_nu:])))
                 
-                #error = 0
-                # for i in range(index_nu,len(myglobalparameters.freq)):
-                #     error += abs(np.real(np.exp(-j*np.angle(np.fft.rfft(corrected)[i-index_nu])) * np.fft.rfft(corrected)[i]))
+
 
                 return error
             
-            # print('guess')
-            # print(guess_ps)
-            # print('x0')
-            # print(x0_ps)
+
             res_ps = optimize.dual_annealing(error_periodic, x0 = x0_ps, maxiter = maxiter_ps, bounds=list(zip(lb_ps, ub_ps)))
-            #res_ps = optimize.minimize(error_periodic,x0_ps, method='SLSQP',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':maxiter_ps})
-            #res_ps = optimize.minimize(error_periodic,x0_ps,method='L-BFGS-B',bounds=list(zip(lb_ps, ub_ps)), options={'maxiter':1000})
-            #res_ps = pso(error_periodic,lb_ps,ub_ps,swarmsize=100,minfunc=1e-18,minstep=1e-8,debug=1,phip=0.5,phig=0.5,maxiter=100)
             
             xopt_ps = res_ps.x*(maxval_ps-minval_ps)+minval_ps
             fopt_ps = res_ps.fun
@@ -777,24 +684,17 @@ class Optimization():
             result_optimization = [xopt_ps, fopt_ps]
             
             if fit_delay or fit_leftover_noise or fit_dilatation:
-                # with open(os.path.join("temp",'temp_file_3.bin'),'ab') as f:
-                #     pickle.dump(result_optimization,f,pickle.HIGHEST_PROTOCOL)
-                # self.vars_temp_file_3 = result_optimization
                 result_optimization = [item.tolist() if isinstance(item, np.ndarray) else item for item in result_optimization]
-                self.vars_temp_file_3.append(result_optimization) # use .append instead of =
+                self.result.append(result_optimization) # use .append instead of =
 
             else:
-                # with open(os.path.join("temp",'temp_file_3.bin'),'wb') as f:
-                #     pickle.dump(result_optimization,f,pickle.HIGHEST_PROTOCOL)
                 result_optimization = [item.tolist() if isinstance(item, np.ndarray) else item for item in result_optimization]
-                self.vars_temp_file_3 = result_optimization
+                self.result = result_optimization
             
             ct = xopt_ps[0]*np.cos(xopt_ps[1]*self.myglobalparameters.t + xopt_ps[2])
             
             if fit_delay or fit_leftover_noise or fit_dilatation:
                 for i in range(numberOfTrace):
-                    # print("correction of trace {}".format(i))
-                    # print(f"correction of trace {i}")
                     datacorrection.pulse[i]= datacorrection.pulse[i] - np.gradient(datacorrection.pulse[i], self.dt)*ct
             else:
                 for i in range(numberOfTrace):
@@ -803,8 +703,7 @@ class Optimization():
                     datacorrection.add_trace(temp)
 
             
-            # print(f'The best error was: \t{fopt_ps}')
-            # print(f'the best parameters were: \t{xopt_ps}\n')
+
 
             datacorrection.moyenne = np.mean(datacorrection.pulse, axis = 0)
             datacorrection.time_std = np.std(datacorrection.pulse, axis = 0)
@@ -812,10 +711,8 @@ class Optimization():
             if apply_window == 1:
                 datacorrection.freq_std_with_window = np.std(rfft(datacorrection.pulse*windows, axis = 1),axis = 0)
                         
-            # with open(os.path.join("temp",'temp_file_2.bin'),'wb') as f:
-            #     pickle.dump(datacorrection,f,pickle.HIGHEST_PROTOCOL)
-            #     pickle.dump(fopt_init,f,pickle.HIGHEST_PROTOCOL)
-            self.vars_temp_file_2_datacorrection = datacorrection
-            self.vars_temp_file_2_fopt=fopt_init
+
+            self.datacorrection = datacorrection
+            self.fopt=fopt_init
 
         ###################################################
