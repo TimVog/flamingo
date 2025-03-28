@@ -523,7 +523,7 @@ class Controler(ControlerBase):
         self.fopt = []
         sum_fopt = 0
         if self.fit_delay or self.fit_leftover_noise or self.fit_dilatation:
-            for i in range(self.data.numberOfTrace): # we begin at 2 cause the first values don't work
+            for i in range(self.data.numberOfTrace):
                 var_inter=self.optim.vars_temp_file_3
                 temp_var_inter = var_inter[i]
                 xopt=temp_var_inter[0] # replace var_inter w temp_var_inter
@@ -544,8 +544,8 @@ class Controler(ControlerBase):
         
         if self.fit_periodic_sampling:
             var_inter=self.optim.vars_temp_file_3
-            xopt_ps=var_inter[0]
-            fopt_ps=var_inter[1]
+            xopt_ps=var_inter[-1][0]
+            fopt_ps=var_inter[-1][1]
             self.periodic_correction.append(xopt_ps)
             
         
