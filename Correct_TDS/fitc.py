@@ -19,6 +19,7 @@ from sklearn.covariance import GraphicalLassoCV, LedoitWolf, OAS
 from pathlib import Path as path_
 from threading import Thread
 import time
+import traceback
 
 import numba #pour inverser rapidement
 @numba.jit
@@ -74,10 +75,10 @@ class Controler(ControlerBase):
         super().__init__()
         # Initialisation:
         
-        self.myreferencedata=TDS.getreferencetrace
+        self.myreferencedata=None
         
-        self.data=TDS.inputdatafromfile
-        self.data_without_sample=TDS.inputdatafromfile
+        self.data=None
+        self.data_without_sample=None
         
         self.myglobalparameters=TDS.globalparameters()
         
@@ -144,7 +145,6 @@ class Controler(ControlerBase):
         self.time_end = -1
         
         self.optim=TDS.Optimization()
-        self.myfitdata = TDS.myfitdata
         
         self.optimization_process=None
         self.interface_process=None
@@ -210,7 +210,7 @@ class Controler(ControlerBase):
     
     
         self.reference_number = self.data.ref_number
-        self.myreferencedata = TDS.getreferencetrace(path_data, self.reference_number, self.trace_start, self.time_start)
+        self.myreferencedata = TDS.ReferenceData(path_data, self.reference_number, self.trace_start, self.time_start)
 
         self.myglobalparameters.t = self.data.time*1e-12 # this assumes input files are in ps ## We load the list with the time of the experiment
         self.nsample = len(self.myglobalparameters.t)
@@ -253,15 +253,13 @@ class Controler(ControlerBase):
                 myinputdata=TDS.mydata(np.pad(myinputdata.pulse,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0)))
 
                 if trace == 0: # on fait le padding une seule fois sur la ref
-                    self.myreferencedata.Pulseinit=np.pad(self.myreferencedata.Pulseinit,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0))
-                    self.myreferencedata.Spulseinit=(TDS.rfft((self.myreferencedata.Pulseinit)))    # fft computed with GPU
+                    self.myreferencedata.setPulse(np.pad(self.myreferencedata.Pulseinit,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0)))
             else:
                 self.mode = "basic"
                 
             # Filter data
             if trace == 0:
-                self.myreferencedata.Spulseinit = self.myreferencedata.Spulseinit*self.Freqwindow
-                self.myreferencedata.Pulseinit  = TDS.irfft(self.myreferencedata.Spulseinit, n = self.nsamplenotreal)
+                self.myreferencedata.setSpectrum(self.myreferencedata.Spulseinit*self.Freqwindow, n = self.nsamplenotreal)
 
             myinputdata.Spulse         = myinputdata.Spulse        *self.Freqwindow
             myinputdata.pulse          = TDS.irfft(myinputdata.Spulse, n = self.nsamplenotreal)
@@ -274,9 +272,9 @@ class Controler(ControlerBase):
                 self.data_without_sample.Pulseinit[trace] = []
             
         if path_data_ref:
-            self.myinput_without_sample.moyenne = np.mean(self.myinput_without_sample.pulse, axis= 0)
+            self.myinput_without_sample.mean = np.mean(self.myinput_without_sample.pulse, axis= 0)
             
-        self.myinput.moyenne = np.mean(self.myinput.pulse, axis= 0)  ### TDS.mean and TDS.std instead for big dataset
+        self.myinput.mean = np.mean(self.myinput.pulse, axis= 0)  ### TDS.mean and TDS.std instead for big dataset
         self.myinput.time_std = np.std(self.myinput.pulse, axis = 0)
         self.myinput.freq_std = np.std(TDS.rfft(self.myinput.pulse, axis = 1), axis = 0)
         
@@ -284,12 +282,11 @@ class Controler(ControlerBase):
             windows = signal.tukey(self.nsamplenotreal, alpha = 0.05)
             self.myinput.freq_std_with_window = np.std(TDS.rfft(self.myinput.pulse*windows, axis = 1), axis = 0)
 
-        self.optim.vars_temp_file_6_data=self.myinput
-        self.optim.vars_temp_file_6_ref=self.myreferencedata
-        self.optim.vars_temp_file_7_globalparameters=self.myglobalparameters
-        self.optim.vars_temp_file_7_apply_window=apply_window
+        self.optim.data=self.myinput
+        self.optim.ref=self.myreferencedata
+        self.optim.globalparameters=self.myglobalparameters
+        self.optim.apply_window=apply_window
         
-        self.myfitdata.myglobalparameters = self.myglobalparameters
         
         self.data.Pulseinit = [] #don't forget to empty it, important for memory
 
@@ -311,16 +308,21 @@ class Controler(ControlerBase):
         self.dilatationmax_guess = dilatationmax_guess
 
             # files for choices made
-        mode_choicies_opt=[self.path_data, self.path_data_ref, self.reference_number, self.fit_dilatation, self.dilatation_limit, self.dilatationmax_guess,
-                               self.Freqwindow,self.timeWindow, self.fit_delay, self.delaymax_guess, self.delay_limit,  self.mode, self.nsample,
-                               self.fit_periodic_sampling, self.periodic_sampling_freq_limit, self.fit_leftover_noise, self.leftcoef_guess, self.leftcoef_limit]
+
+        self.optim.reference_number = self.reference_number
+        self.optim.fit_dilatation = self.fit_dilatation
+        self.optim.dilatation_limit = self.dilatation_limit
+        self.optim.dilatationmax_guess = self.dilatationmax_guess
+        self.optim.fit_delay = self.fit_delay
+        self.optim.delaymax_guess = self.delaymax_guess
+        self.optim.delay_limit = self.delay_limit
+        self.optim.nsample = self.nsample
+        self.optim.fit_periodic_sampling = self.fit_periodic_sampling
+        self.optim.periodic_sampling_freq_limit = self.periodic_sampling_freq_limit
+        self.optim.fit_leftover_noise = self.fit_leftover_noise
+        self.optim.leftcoef_guess = self.leftcoef_guess
+        self.optim.leftcoef_limit = self.leftcoef_limit
     
-        # # if not os.path.isdir("temp"):
-        # #     os.mkdir("temp")
-        # with open(os.path.join("temp",'temp_file_1_ini.bin'),'wb') as f:
-        #     pickle.dump(mode_choicies_opt,f,pickle.HIGHEST_PROTOCOL)
-        self.optim.vars_temp_file_1_ini=mode_choicies_opt
-        self.myfitdata.vars_temp_file_1_ini=mode_choicies_opt
 
 
 
@@ -343,14 +345,11 @@ class Controler(ControlerBase):
     def algo_parameters(self,choix_algo,swarmsize,niter, niter_ps):
         """Save algorithm choices in temp file 5"""
         self.algo=choix_algo
-        mode_choicies_opt=[choix_algo,int(swarmsize),int(niter), int(niter_ps)]
-        # if not os.path.isdir("temp"):
-        #     os.mkdir("temp")
 
-        # with open(os.path.join("temp",'temp_file_5.bin'),'wb') as f:
-        #     pickle.dump(mode_choicies_opt,f,pickle.HIGHEST_PROTOCOL)
-        # self.is_temp_file_5 = 1
-        self.optim.vars_temp_file_5=mode_choicies_opt
+        self.optim.algo = choix_algo
+        self.optim.swarmsize = int(swarmsize)
+        self.optim.maxiter = int(niter)
+        self.optim.maxiter_ps = int(niter_ps)
 
         self.refreshAll3("")
         
@@ -367,155 +366,9 @@ class Controler(ControlerBase):
         print("\n-Start of optimization") # add the file name
         self.optim.optimize(nb_proc)
         
-        # # Creating an optimisation process
-        # print("\n Background opt begins")
-        
-        # background_opt = Thread(target=self.optim.optimize(nb_proc), daemon = True )
-        # background_opt.start()
-   
-   
-        # #Creating an optimisation process
-        # self.optimization_process = multiprocessing.Process(target=self.optim.optimize, args=(nb_proc, ),daemon=True)
-        # self.optimization_process.start()
-        # # waiting for the end of the optimisation process
-        # self.optimization_process.join()
         print("-Optimization completed")
-        
 
-        
-#         if sys.platform=="win32" or sys.platform=="cygwin":
-#             print("OS:Windows \n")
-#             if not os.path.isdir("temp"):
-#                 os.mkdir("temp")
-#             optimization_filename = os.path.join('temp',"opt.bat")
-#             try:
-#                 with open(optimization_filename, 'w') as OPATH:
-#                     OPATH.writelines(['call set Path=%Path%;C:\ProgramData\Anaconda3 \n',
-#                     'call set Path=%Path%;C:\ProgramData\Anaconda3\condabin \n',
-#                     'call set Path=%Path%;C:\ProgramData\Anaconda3\Scripts \n',
-#                     #'call conda activate \n', 
-#                     f'call mpiexec -n {nb_proc} python opt.py'])
-# #                    OPATH.writelines([f'call mpiexec -n {nb_proc} opt.exe'])
-#                 subprocess.call(optimization_filename)
-#                 returncode = 0
-#                 error = ""
-#                 output = ""
-#             except:
-#                 print("No parallelization! You don't have MPI installed or there's a problem with your MPI.")
-#                 with open(optimization_filename, 'w') as OPATH:
-#                     OPATH.writelines([f'call opt.exe'])
-#                 subprocess.call(optimization_filename)
-#                 returncode = 0
-#                 error = ""
-#                 output = ""
-#         elif sys.platform=="linux" or sys.platform=="darwin":
-#             # print("OS:Linux/MacOS \n")
-#             optimization_filename = os.path.join('temp',"opt.sh")
-#             # print(optimization_filename)
-#             try:
-#                 # Check if Open MPI is correctly installed
-#                 try:
-#                     command = 'mpiexec --version'
-#                     process=subprocess.Popen(command.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-#                     output_mpi,error_mpi = process.communicate()
-#                     returncode_mpi=process.returncode
-#                 except:
-#                     returncode_mpi = 1
-#                     error_mpi = "Command mpiexec not recognized."
-
-#                 try:
-#                     command = './correct-env/bin/python --version'
-#                     process=subprocess.Popen(command.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-#                     output_py3,error_py3 = process.communicate()
-#                     returncode_py3=process.returncode
-#                     # print(f"####\npython venv\n####")
-#                     python_path = "./correct-env/bin/python"
-#                 except:
-#                     try:
-#                         command = "python --version"
-#                         process=subprocess.Popen(command.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-#                         output_py3,error_py3 = process.communicate()
-#                         returncode_py3=process.returncode
-#                         python_path = "python"
-#                         # print(f" python version worked" if returncode_py3 == 0 else f"python version failed")
-#                     except:
-#                         returncode_py3 = 1
-#                         error_py3 = "Command python not recognized."
-
-#                 # Run optimization
-#                 if returncode_mpi==0:
-#                     if returncode_py3==0:
-#                         # fpath = os.getcwd()
-#                         # fpath = os.path.join(fpath,"opt.py")
-#                         # print(fpath)
-#                         # print(f"enter mpiexec command")
-#                         # command = f"#!/bin/sh\nmpiexec -n 1 {python_path} opt.py"
-#                         command = f"#!/bin/sh\npython opt.py"
-#                         # command = 'mpiexec -n 20 {1} opt.py'.format(python_path)
-#                         # print(command)
-#                     else:
-#                         print(f"Problem with python command : \n {error_py3} \n")
-#                         return(0)
-#                 else:
-#                     print(f"No parallelization! You don't have MPI installed or there's a problem with your MPI: \n {error_mpi}")
-#                     if returncode_py3==0:
-#                         command = f'#!/bin/sh\n{python_path} opt.py'
-#                     else:
-#                         print(f"Problem with python command : \n {error_py3} \n")
-#                         return(0)
-
-#                 try:
-#                     with open(optimization_filename, 'w') as OPATH:
-#                         OPATH.writelines(command)
-#                     # print(f"permission ask")
-#                     returncode = subprocess.call(f'chmod +x ./{optimization_filename}',shell=True)
-#                     if returncode == 0:
-#                         # print(f"permission granted")
-#                         # print(os.getcwd())
-#                         # returncode = subprocess.call('./{}'.format(optimization_filename),shell=True)
-#                         optimization_filename = path_().cwd().joinpath("temp").joinpath("opt.sh")
-#                         # print(f"{optimization_filename}")
-#                         process = subprocess.run(f"{optimization_filename}",shell=True)
-#                         # print(process.returncode)
-#                         # print(returncode)
-#                     if returncode == 1:
-#                         command = ""
-#                         with open("launch_opt.py", 'w') as OPATH:
-#                             OPATH.writelines(command)
-#                             # print(f"created launch_opt.py")
-#                         try:
-#                             import launch_opt
-#                             try:
-#                                 f=open(os.path.join("temp",'temp_file_3.bin'),'rb')
-#                                 f.close()
-#                                 returncode=0
-#                             except:
-#                                 print("Unknown problem. cannot open temp file 3")
-#                                 sys.exit()
-#                         except:
-#                             print("Unknown problem. cannot import launch opt")
-#                             sys.exit()
-#                 except:
-#                     returncode = 1
-#                     error = "Unknow problem."
-#                     output = ""
-#             except:
-#                 print("Unknown problem.")
-#                 sys.exit()
-
-#         else:
-#             print("System not supported.")
-#             return(0)
-
-#         # We dont verify if returncode==0 anymore
-#         if returncode==0:
-#         with open(os.path.join("temp",'temp_file_3.bin'),'rb') as f:
-        
-        # Vérification de vars_temp_file_3
-        # var_inter = self.optim.vars_temp_file_3
-        # print(f"var_inter before looks like : {var_inter}")
-        # f=open(os.path.join("temp",'temp_file_3.bin'),'rb')
-        self.is_temp_file_3 = 1
+#        self.is_temp_file_3 = 1  #Still used?
         self.delay_correction = []
         self.leftover_correction = []
         self.periodic_correction = []
@@ -523,9 +376,8 @@ class Controler(ControlerBase):
         self.fopt = []
         sum_fopt = 0
         if self.fit_delay or self.fit_leftover_noise or self.fit_dilatation:
-            for i in range(self.data.numberOfTrace):
-                var_inter=self.optim.vars_temp_file_3
-                temp_var_inter = var_inter[i]
+            for i in range(self.data.numberOfTrace): # we begin at 2 cause the first values don't work
+                temp_var_inter = self.optim.result[i]
                 xopt=temp_var_inter[0] # replace var_inter w temp_var_inter
                 fopt=temp_var_inter[1] # replace var_inter w temp_var_inter
                 self.fopt.append(fopt)
@@ -543,15 +395,14 @@ class Controler(ControlerBase):
             sum_fopt = np.sum(self.fopt)
         
         if self.fit_periodic_sampling:
-            var_inter=self.optim.vars_temp_file_3
-            xopt_ps=var_inter[-1][0]
-            fopt_ps=var_inter[-1][1]
+            xopt_ps=self.optim.result[-1][0]
+            fopt_ps=self.optim.result[-1][1]
             self.periodic_correction.append(xopt_ps)
             
         
         # with open(os.path.join("temp",'temp_file_2.bin'),'rb') as f:
-        self.mydatacorrection = self.optim.vars_temp_file_2_datacorrection
-        self.fopt_init = self.optim.vars_temp_file_2_fopt       #available only for delay,dilatation,amplitude correction
+        self.mydatacorrection = self.optim.datacorrection
+        self.fopt_init = self.optim.fopt       #available only for delay,dilatation,amplitude correction
         
 
         message = "Optimization terminated successfully\nCheck the output directory for the result\n\n"
@@ -569,16 +420,9 @@ class Controler(ControlerBase):
         message += citation
         
         self.refreshAll3(message)
-        # else:
-        #     self.refreshAll3(f"Output : \n {output} \n")
-        #     print("System not supported. \n")
-        #     print(f'Output : \n {output} \n Error : \n {error} \n')
-        #     return(0)
         
     def stop_optimization(self):
         self.optim.interrupt=True
-        # if self.optimization_process is not None:
-        #     self.optimization_process.join()
         
     def save_data(self, filename, path, file, cov_algo = 3):
       
@@ -589,7 +433,7 @@ class Controler(ControlerBase):
                     if self.optim_succeed:
                         if file == 0:
                             title = "\n timeaxis (ps) \t E-field"
-                            out = np.column_stack((self.data.time, self.mydatacorrection.moyenne[:self.nsample]))
+                            out = np.column_stack((self.data.time, self.mydatacorrection.mean[:self.nsample]))
 
                             if self.data.timestamp:
                                 custom+= str(self.data.timestamp[0])
@@ -631,24 +475,23 @@ class Controler(ControlerBase):
                 
                         if file == 2:
                             #save in hdf5
-                            hdf =  h5py.File(os.path.join(path,filename),"w")
-                            dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0][:self.nsample])
-                            dataset.attrs["CITATION"] = citation
-                            
-                            if self.data.timestamp:
-                                dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
-
-                            hdf.create_dataset('timeaxis', data = self.data.time)
-                                
-                            count = 1
-                            for i in self.mydatacorrection.pulse[1:]:
-                                dataset = hdf.create_dataset(str(count), data = i[:self.nsample])
-
+                            with h5py.File(os.path.join(path,filename),"w") as hdf:
+                                dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0][:self.nsample])
                                 dataset.attrs["CITATION"] = citation
+                                
                                 if self.data.timestamp:
-                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
-                                count+=1
-                            hdf.close()
+                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
+
+                                hdf.create_dataset('timeaxis', data = self.data.time)
+                                       
+                                count = 1
+                                for i in self.mydatacorrection.pulse[1:]:
+                                    dataset = hdf.create_dataset(str(count), data = i[:self.nsample])
+
+                                    dataset.attrs["CITATION"] = citation
+                                    if self.data.timestamp:
+                                        dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
+                                    count+=1
                             
                         if file == 3:
                             title = "\n timeaxis (ps) \t Std E-field"
@@ -680,7 +523,7 @@ class Controler(ControlerBase):
                         if file == 5:
                             if self.mydatacorrection.covariance is None:
                                 if self.path_data_ref:
-                                    transfer_function = TDS.irfft(TDS.rfft(self.mydatacorrection.moyenne[:self.nsample])/TDS.rfft(self.myinput_without_sample.moyenne))
+                                    transfer_function = TDS.irfft(TDS.rfft(self.mydatacorrection.mean[:self.nsample])/TDS.rfft(self.myinput_without_sample.mean))
                             
                                 if cov_algo == 1:
                                     if self.path_data_ref:
@@ -749,7 +592,7 @@ class Controler(ControlerBase):
                                 custom+= str(self.data.timestamp[0])
                             else:
                                 custom+= "unknown"
-                            out = np.column_stack((self.data.time, self.myinput.moyenne[:self.nsample]))
+                            out = np.column_stack((self.data.time, self.myinput.mean[:self.nsample]))
 
                             np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)                    
                         
@@ -803,7 +646,7 @@ class Controler(ControlerBase):
                         if file == 5:
                             if self.myinput.covariance is None:
                                 if self.path_data_ref:
-                                    transfer_function = TDS.irfft(TDS.rfft(self.myinput.moyenne[:self.nsample])/TDS.rfft(self.myinput_without_sample.moyenne))
+                                    transfer_function = TDS.irfft(TDS.rfft(self.myinput.mean[:self.nsample])/TDS.rfft(self.myinput_without_sample.mean))
                             
                                 if cov_algo == 1:
                                     if self.path_data_ref:
@@ -870,7 +713,7 @@ class Controler(ControlerBase):
                 return 0
         except Exception as e:
             self.refreshAll3("Please enter initialization data first")
-            print(e)
+            print(traceback.format_exc())
             return 0
 
             

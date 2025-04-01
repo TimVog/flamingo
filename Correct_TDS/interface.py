@@ -1333,7 +1333,7 @@ class Optimization_choices(QGroupBox):
             except:
                 self.controler.message_log_tab3("You don't have MPI for parallelization, we'll use only 1 process")
                 nb_proc=1
-            if self.controler.optim.vars_temp_file_5 != None:
+            if self.controler.optim.algo != None:
                 self.controler.begin_optimization(nb_proc)
                 
                 # # Creating an optimisation process
@@ -1549,38 +1549,6 @@ class Saving_parameters(QGroupBox):
             self.controler.refreshAll3(f"\nNoise matrices will NOT be saved\n") # "noise matrix" replaced by "Noise matrices"
         
         
-        # print(csts.save_bools)
-        
-        # print(f"Will save mean" if csts.save_bools["mean"] else f"Will not save mean")
-        # print(f"Will save std time" if csts.save_bools["std_time"] else f"Will not save std time")
-        # print(f"Will save std freq" if csts.save_bools["std_freq"] else f"Will not save std freq")
-    
-    # def save_cov(self):
-        # global preview
-        # if self.controler.initialised:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Covariance / Noise convolution matrix","noise.h5","HDF5 (*.h5)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Covariance / Noise convolution matrix","noise.h5","HDF5 (*.h5)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 5)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving matrix - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please enter initialization data first")
     
     def save_mean_batch(self,filename,ref=None):
         global preview
@@ -1612,17 +1580,8 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving mean - Done")
                 else:
-                    print("Something went wrong")          
-            # print(path.joinpath(path_(filename).name))
-#            if sys.platform =="linux" or sys.platform=="darwin":
-#                subprocess.run(f"cp {filename} {path.joinpath(path_(filename).name)}", shell=True)
-#            elif sys.platform =="win32" or sys.platform=="cygwin":
-#                subprocess.run(f"copy {path_(filename)} {path.joinpath(path_(filename).name)}", shell=True)
-#            if ref != None:
-#                if sys.platform=="linux" or sys.platform=="darwin":
-#                    subprocess.run(f"cp {ref} {path.joinpath(path_(ref).name)}", shell=True)
-#                elif sys.platform=="win32" or sys.platform=="cygwin":
-#                    subprocess.run(f"copy {path_(ref)} {path.joinpath(path_(ref).name)}", shell=True)
+                    print("An error occured while saving the mean")          
+
                     
         else:
             self.controler.refreshAll3("Please enter initialization data first")
@@ -1648,19 +1607,6 @@ class Saving_parameters(QGroupBox):
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
             
-            # path_init = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if csts.modesuper:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}").joinpath(f"superresolution")
-            # else:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if not path_(path_init).is_dir():
-                # path_(path_init).mkdir()
-                # path_(path).mkdir()
-            # elif path_(path_init).is_dir():
-                # if not path_(path).is_dir():
-                    # path_(path).mkdir() 
-            # else:
-                # pass
 
             if name:
                 saved = self.controler.save_data(name, path, 3)
@@ -1669,7 +1615,7 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving std in time domain - Done")
                 else:
-                    print("Something went wrong")          
+                    print("An error occured while saving std (time domain)")          
         else:
             self.controler.refreshAll3("Please enter initialization data first")  
             
@@ -1692,19 +1638,6 @@ class Saving_parameters(QGroupBox):
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
             
-            # path_init = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if csts.modesuper:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}").joinpath(f"superresolution")
-            # else:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if not path_(path_init).is_dir():
-                # path_(path_init).mkdir()
-                # path_(path).mkdir()
-            # elif path_(path_init).is_dir():
-                # if not path_(path).is_dir():
-                    # path_(path).mkdir() 
-            # else:
-                # pass
             
             if name:
                 saved = self.controler.save_data(name, path, 4)
@@ -1713,7 +1646,7 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving std in frequency domain - Done")
                 else:
-                    print("Something went wrong")          
+                    print("An error occured while saving std (frequency domain)")          
         else:
             self.controler.refreshAll3("Please enter initialization data first")
 
@@ -1736,21 +1669,7 @@ class Saving_parameters(QGroupBox):
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
             
-            
-            # path_init = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if csts.modesuper:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}").joinpath(f"superresolution")
-            # else:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if not path_(path_init).is_dir():
-                # path_(path_init).mkdir()
-                # path_(path).mkdir()
-            # elif path_(path_init).is_dir():
-                # if not path_(path).is_dir():
-                    # path_(path).mkdir() 
-            # else:
-                # pass
-            
+
             if name:
                 saved = self.controler.save_data(name, path, 1)
                 if saved:
@@ -1758,7 +1677,7 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving parameters - Done")
                 else:
-                    print("Something went wrong")          
+                    print("An error occured while saving correction parameters")          
         else:
             self.controler.refreshAll3("Please launch an optimization first")
     
@@ -1779,20 +1698,7 @@ class Saving_parameters(QGroupBox):
                 path = path_(filename).parent#.joinpath(f"{path_(filename).stem}")
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
-            
-            # path_init = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if csts.modesuper:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}").joinpath(f"superresolution")
-            # else:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if not path_(path_init).is_dir():
-                # path_(path_init).mkdir()
-                # path_(path).mkdir()
-            # elif path_(path_init).is_dir():
-                # if not path_(path).is_dir():
-                    # path_(path).mkdir() 
-            # else:
-                # pass
+
             
             if name:
                 saved = self.controler.save_data(name, path, 2)
@@ -1801,7 +1707,7 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving each traces - Done")
                 else:
-                    print("Something went wrong")          
+                    print("An error occured while saving corrected traces")          
         else:
             self.controler.refreshAll3("Please enter initialization data first")
     
@@ -1822,21 +1728,7 @@ class Saving_parameters(QGroupBox):
                 path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
                 if not path_(path).is_dir():
                     path_(path).mkdir() 
-            
-            # path_init = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if csts.modesuper:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}").joinpath(f"superresolution")
-            # else:
-                # path = path_(filename).parent.joinpath(f"{path_(filename).stem}")
-            # if not path_(path_init).is_dir():
-                # path_(path_init).mkdir()
-                # path_(path).mkdir()
-            # elif path_(path_init).is_dir():
-                # if not path_(path).is_dir():
-                    # path_(path).mkdir() 
-            # else:
-                # pass
-            
+
             if name:
                 saved = self.controler.save_data(name, path, 5)
                 if saved:
@@ -1844,148 +1736,10 @@ class Saving_parameters(QGroupBox):
                         preview = 1
                     self.controler.refreshAll3(" Saving matrix - Done")
                 else:
-                    print("Something went wrong")          
+                    print("An error occured while saving matrix")          
         else:
             self.controler.refreshAll3("Please enter initialization data first")
     
-    # def save_mean(self):
-        # global preview
-        # if self.controler.initialised:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Mean file","mean.txt","TXT (*.txt)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Mean file","mean.txt","TXT (*.txt)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 0)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving mean - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please enter initialization data first")
-            
-    # def save_param(self):
-        # global preview
-        # if self.controler.optim_succeed:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","correction_parameters.txt","TXT (*.txt)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Optimization parameters filename","correction_parameters.txt","TXT (*.txt)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 1)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving parameters - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please launch an optimization first")
-        
-    # def save_traces(self):
-        # global preview
-        # if self.controler.initialised:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Each traces filename","traces.h5","HDF5 (*.h5)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Each traces filename","traces.h5","HDF5 (*.h5)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 2)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving each traces - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please enter initialization data first")
-            
-        
-    # def save_std_time(self):
-        # global preview
-        # if self.controler.initialised:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Std time domain file","std_time.txt","TXT (*.txt)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Std time domain file","std_time.txt","TXT (*.txt)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 3)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving std in time domain - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please enter initialization data first")
-
-            
-
-    # def save_std_freq(self):
-        # global preview
-        # if self.controler.initialised:
-            # try:
-                # # options = QFileDialog.Options()
-                # # options |= QFileDialog.DontUseNativeDialog
-                # # fileName, _ = QFileDialog.getSaveFileName(self,"Std frequency domain file","std_freq.txt","TXT (*.txt)", options=options)
-                # fileName, _ = QFileDialog.getSaveFileName(self,"Std frequency domain file","std_freq.txt","TXT (*.txt)")
-                # try:
-                    # name=os.path.basename(fileName)
-                    # path = os.path.dirname(fileName)
-                    # if name:
-                        # saved = self.controler.save_data(name, path, 4)
-                        # if saved:
-                            # if not self.controler.optim_succeed:
-                                # preview = 1
-                            # self.controler.refreshAll3(" Saving std in frequency domain - Done")
-                        # else:
-                            # print("Something went wrong")          
-                # except:
-                    # self.controler.error_message_output_filename()
-            # except:
-                # self.controler.error_message_output_filename()
-                # return(0)
-        # else:
-            # self.controler.refreshAll3("Please enter initialization data first")
-            
             
     def refresh():
         pass
@@ -2120,10 +1874,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.rfft(myinput.moyenne*windows)))/np.log(10), 'b-', label='mean spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.rfft(myinput.mean*windows)))/np.log(10), 'b-', label='mean spectre (log)')
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.moyenne*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.mean*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
 
             if apply_window == 0:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.freq_std/np.sqrt(n_traces)))/np.log(10), 'b--', label='Standard error (log)')
@@ -2147,10 +1901,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Amplitude',color=color)
-            ax1.plot(myglobalparameters.t, myinput.moyenne*windows, 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, myinput.mean*windows, 'b-', label='mean pulse')
             if not preview:
                 ax1.plot(myglobalparameters.t, myreferencedata.Pulseinit*windows, 'g-', label='reference pulse')
-                ax1.plot(myglobalparameters.t, mydatacorrection.moyenne*windows, 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, mydatacorrection.mean*windows, 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
            
@@ -2251,10 +2005,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Phase (radians)',color=color)
-            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows))), 'b-', label='mean phase')
+            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.mean*windows))), 'b-', label='mean phase')
             if not preview:
                 ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows))), 'g-', label='reference phase')
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows))), 'r-', label='corrected mean phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.mean*windows))), 'r-', label='corrected mean phase')
             ax1.legend()
             ax1.grid()
         
