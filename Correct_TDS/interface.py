@@ -1874,10 +1874,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('E_field [dB]',color=color)
-            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.rfft(myinput.moyenne*windows)))/np.log(10), 'b-', label='mean spectre (log)')
+            ax1.plot(myglobalparameters.freq,20*np.log(abs(TDS.rfft(myinput.mean*windows)))/np.log(10), 'b-', label='mean spectre (log)')
             if not preview:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(myreferencedata.Pulseinit*windows)))/np.log(10), 'g-', label='reference spectre (log)')
-                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.moyenne*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
+                ax1.plot(myglobalparameters.freq,20*np.log(abs(np.fft.rfft(mydatacorrection.mean*windows)))/np.log(10), 'r-', label='corrected mean spectre (log)')
 
             if apply_window == 0:
                 ax1.plot(myglobalparameters.freq,20*np.log(abs(myinput.freq_std/np.sqrt(n_traces)))/np.log(10), 'b--', label='Standard error (log)')
@@ -1901,10 +1901,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Time [s]')
             ax1.set_ylabel('Amplitude',color=color)
-            ax1.plot(myglobalparameters.t, myinput.moyenne*windows, 'b-', label='mean pulse')
+            ax1.plot(myglobalparameters.t, myinput.mean*windows, 'b-', label='mean pulse')
             if not preview:
                 ax1.plot(myglobalparameters.t, myreferencedata.Pulseinit*windows, 'g-', label='reference pulse')
-                ax1.plot(myglobalparameters.t, mydatacorrection.moyenne*windows, 'r-', label='corrected mean pulse')
+                ax1.plot(myglobalparameters.t, mydatacorrection.mean*windows, 'r-', label='corrected mean pulse')
             ax1.legend()
             ax1.grid()
            
@@ -2005,10 +2005,10 @@ class Graphs_optimisation(QGroupBox):
             color = 'tab:red'
             ax1.set_xlabel('Frequency [Hz]')
             ax1.set_ylabel('Phase (radians)',color=color)
-            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.moyenne*windows))), 'b-', label='mean phase')
+            ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myinput.mean*windows))), 'b-', label='mean phase')
             if not preview:
                 ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(myreferencedata.Pulseinit*windows))), 'g-', label='reference phase')
-                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.moyenne*windows))), 'r-', label='corrected mean phase')
+                ax1.plot(myglobalparameters.freq,np.unwrap(np.angle(np.fft.rfft(mydatacorrection.mean*windows))), 'r-', label='corrected mean phase')
             ax1.legend()
             ax1.grid()
         

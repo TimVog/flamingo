@@ -19,6 +19,7 @@ from sklearn.covariance import GraphicalLassoCV, LedoitWolf, OAS
 from pathlib import Path as path_
 from threading import Thread
 import time
+import traceback
 
 import numba #pour inverser rapidement
 @numba.jit
@@ -74,10 +75,10 @@ class Controler(ControlerBase):
         super().__init__()
         # Initialisation:
         
-        self.myreferencedata=TDS.getreferencetrace
+        self.myreferencedata=None
         
-        self.data=TDS.inputdatafromfile
-        self.data_without_sample=TDS.inputdatafromfile
+        self.data=None
+        self.data_without_sample=None
         
         self.myglobalparameters=TDS.globalparameters()
         
@@ -144,7 +145,6 @@ class Controler(ControlerBase):
         self.time_end = -1
         
         self.optim=TDS.Optimization()
-        self.myfitdata = TDS.myfitdata
         
         self.optimization_process=None
         self.interface_process=None
@@ -210,7 +210,7 @@ class Controler(ControlerBase):
     
     
         self.reference_number = self.data.ref_number
-        self.myreferencedata = TDS.getreferencetrace(path_data, self.reference_number, self.trace_start, self.time_start)
+        self.myreferencedata = TDS.ReferenceData(path_data, self.reference_number, self.trace_start, self.time_start)
 
         self.myglobalparameters.t = self.data.time*1e-12 # this assumes input files are in ps ## We load the list with the time of the experiment
         self.nsample = len(self.myglobalparameters.t)
@@ -253,15 +253,13 @@ class Controler(ControlerBase):
                 myinputdata=TDS.mydata(np.pad(myinputdata.pulse,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0)))
 
                 if trace == 0: # on fait le padding une seule fois sur la ref
-                    self.myreferencedata.Pulseinit=np.pad(self.myreferencedata.Pulseinit,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0))
-                    self.myreferencedata.Spulseinit=(TDS.rfft((self.myreferencedata.Pulseinit)))    # fft computed with GPU
+                    self.myreferencedata.setPulse(np.pad(self.myreferencedata.Pulseinit,(0,self.nsamplenotreal-self.nsample),'constant',constant_values=(0)))
             else:
                 self.mode = "basic"
                 
             # Filter data
             if trace == 0:
-                self.myreferencedata.Spulseinit = self.myreferencedata.Spulseinit*self.Freqwindow
-                self.myreferencedata.Pulseinit  = TDS.irfft(self.myreferencedata.Spulseinit, n = self.nsamplenotreal)
+                self.myreferencedata.setSpectrum(self.myreferencedata.Spulseinit*self.Freqwindow, n = self.nsamplenotreal)
 
             myinputdata.Spulse         = myinputdata.Spulse        *self.Freqwindow
             myinputdata.pulse          = TDS.irfft(myinputdata.Spulse, n = self.nsamplenotreal)
@@ -274,9 +272,9 @@ class Controler(ControlerBase):
                 self.data_without_sample.Pulseinit[trace] = []
             
         if path_data_ref:
-            self.myinput_without_sample.moyenne = np.mean(self.myinput_without_sample.pulse, axis= 0)
+            self.myinput_without_sample.mean = np.mean(self.myinput_without_sample.pulse, axis= 0)
             
-        self.myinput.moyenne = np.mean(self.myinput.pulse, axis= 0)  ### TDS.mean and TDS.std instead for big dataset
+        self.myinput.mean = np.mean(self.myinput.pulse, axis= 0)  ### TDS.mean and TDS.std instead for big dataset
         self.myinput.time_std = np.std(self.myinput.pulse, axis = 0)
         self.myinput.freq_std = np.std(TDS.rfft(self.myinput.pulse, axis = 1), axis = 0)
         
@@ -289,7 +287,6 @@ class Controler(ControlerBase):
         self.optim.globalparameters=self.myglobalparameters
         self.optim.apply_window=apply_window
         
-        self.myfitdata.myglobalparameters = self.myglobalparameters
         
         self.data.Pulseinit = [] #don't forget to empty it, important for memory
 
@@ -326,10 +323,6 @@ class Controler(ControlerBase):
         self.optim.leftcoef_guess = self.leftcoef_guess
         self.optim.leftcoef_limit = self.leftcoef_limit
     
-
-        self.myfitdata.fit_dilatation=self.fit_dilatation       
-        self.myfitdata.fit_leftover_noise=self.fit_leftover_noise
-        self.myfitdata.fit_delay=self.fit_delay
 
 
 
@@ -440,7 +433,7 @@ class Controler(ControlerBase):
                     if self.optim_succeed:
                         if file == 0:
                             title = "\n timeaxis (ps) \t E-field"
-                            out = np.column_stack((self.data.time, self.mydatacorrection.moyenne[:self.nsample]))
+                            out = np.column_stack((self.data.time, self.mydatacorrection.mean[:self.nsample]))
 
                             if self.data.timestamp:
                                 custom+= str(self.data.timestamp[0])
@@ -482,24 +475,23 @@ class Controler(ControlerBase):
                 
                         if file == 2:
                             #save in hdf5
-                            hdf =  h5py.File(os.path.join(path,filename),"w")
-                            dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0][:self.nsample])
-                            dataset.attrs["CITATION"] = citation
-                            
-                            if self.data.timestamp:
-                                dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
-
-                            hdf.create_dataset('timeaxis', data = self.data.time)
-                                
-                            count = 1
-                            for i in self.mydatacorrection.pulse[1:]:
-                                dataset = hdf.create_dataset(str(count), data = i[:self.nsample])
-
+                            with h5py.File(os.path.join(path,filename),"w") as hdf:
+                                dataset = hdf.create_dataset(str("0"), data = self.mydatacorrection.pulse[0][:self.nsample])
                                 dataset.attrs["CITATION"] = citation
+                                
                                 if self.data.timestamp:
-                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
-                                count+=1
-                            hdf.close()
+                                    dataset.attrs["TIMESTAMP"] = self.data.timestamp[0]
+
+                                hdf.create_dataset('timeaxis', data = self.data.time)
+                                       
+                                count = 1
+                                for i in self.mydatacorrection.pulse[1:]:
+                                    dataset = hdf.create_dataset(str(count), data = i[:self.nsample])
+
+                                    dataset.attrs["CITATION"] = citation
+                                    if self.data.timestamp:
+                                        dataset.attrs["TIMESTAMP"] = self.data.timestamp[count]
+                                    count+=1
                             
                         if file == 3:
                             title = "\n timeaxis (ps) \t Std E-field"
@@ -531,7 +523,7 @@ class Controler(ControlerBase):
                         if file == 5:
                             if self.mydatacorrection.covariance is None:
                                 if self.path_data_ref:
-                                    transfer_function = TDS.irfft(TDS.rfft(self.mydatacorrection.moyenne[:self.nsample])/TDS.rfft(self.myinput_without_sample.moyenne))
+                                    transfer_function = TDS.irfft(TDS.rfft(self.mydatacorrection.mean[:self.nsample])/TDS.rfft(self.myinput_without_sample.mean))
                             
                                 if cov_algo == 1:
                                     if self.path_data_ref:
@@ -600,7 +592,7 @@ class Controler(ControlerBase):
                                 custom+= str(self.data.timestamp[0])
                             else:
                                 custom+= "unknown"
-                            out = np.column_stack((self.data.time, self.myinput.moyenne[:self.nsample]))
+                            out = np.column_stack((self.data.time, self.myinput.mean[:self.nsample]))
 
                             np.savetxt(os.path.join(path,filename),out, delimiter = "\t", header= citation+custom+title)                    
                         
@@ -654,7 +646,7 @@ class Controler(ControlerBase):
                         if file == 5:
                             if self.myinput.covariance is None:
                                 if self.path_data_ref:
-                                    transfer_function = TDS.irfft(TDS.rfft(self.myinput.moyenne[:self.nsample])/TDS.rfft(self.myinput_without_sample.moyenne))
+                                    transfer_function = TDS.irfft(TDS.rfft(self.myinput.mean[:self.nsample])/TDS.rfft(self.myinput_without_sample.mean))
                             
                                 if cov_algo == 1:
                                     if self.path_data_ref:
@@ -721,7 +713,7 @@ class Controler(ControlerBase):
                 return 0
         except Exception as e:
             self.refreshAll3("Please enter initialization data first")
-            print(e)
+            print(traceback.format_exc())
             return 0
 
             
