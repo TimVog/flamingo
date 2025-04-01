@@ -72,9 +72,9 @@ The optimization process can also be launched from a python code as shown in the
 
 
 	#Compulsory initialization step:
-	opti.setData(toCorrect)																			#indicates the list of pulses to correct
-	opti.setReference(ref)																			#reference signal
-	opti.setTimeAxis(t)																				#time axis
+	opti.setData(toCorrect)		#indicates the list of pulses to correct
+	opti.setReference(ref)		#reference signal
+	opti.setTimeAxis(t)			#time axis
 	opti.setParameters(fitDelay = True, delayLimit = 1e-14, fitAmplitude=True, amplitudeLimit=1)	#Optimisation choices
 
 	#Launch optimization
