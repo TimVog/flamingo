@@ -58,7 +58,34 @@
 
 ## Usage
 
-A THz software that performs statistical analysis and error correction on .he files obtained with TeraHertz Time Domain Spectroscopy (THz-TDS).
+A THz software that performs statistical analysis and error correction on .h5 files obtained with TeraHertz Time Domain Spectroscopy (THz-TDS).
+Input file should contains :
+ - One dataset with label "timeaxis", containing the sampling times in picoseconds
+ - One dataset for each time signal to correct, labeled with their index starting from 0
+
+
+The optimization process can also be launched from a python code as shown in the example below:
+
+	import Correct_TDS
+
+	opti = Correct_TDS.Optimization()
+
+
+	#Compulsory initialization step:
+	opti.setData(toCorrect)																			#indicates the list of pulses to correct
+	opti.setReference(ref)																			#reference signal
+	opti.setTimeAxis(t)																				#time axis
+	opti.setParameters(fitDelay = True, delayLimit = 1e-14, fitAmplitude=True, amplitudeLimit=1)	#Optimisation choices
+
+	#Launch optimization
+	opti.optimize()
+
+	#Get the corrected signals:
+	corrected = opti.getCorrectedTraces()
+	#Get the correction parameters as a dictionary
+	parameters = opti.getCorrectionParameters()
+
+
 
 ## Related software
 Below is a list of other software projects that address related tasks in
