@@ -257,32 +257,32 @@ class Optimization():
         self.interrupt=False #Becoming True when break button pressed
     
     def setData(self, pulses):
-    """
-    Compulsory before using method optimize.
-    Define the list of signal to correct.
-    Signal should be real numbers.
-    
-    Parameters:
-    ----------
-    pulses: array like 2d
-        list of time domain measurement to correct.
-    
-    """
+        """
+        Compulsory before using method optimize.
+        Define the list of signal to correct.
+        Signal should be real numbers.
+        
+        Parameters:
+        ----------
+        pulses: array like 2d
+            list of time domain measurement to correct.
+        
+        """
         self.data = datalist(pulses)
         
     def setReference(self, referenceTrace, referenceNumber=None): #if the reference is also part of the input dataset, indicate its index in the input list with referenceNumber
-    """
-    Compulsory before using method optimize.
-    Define a reference signal for delay and amplitude correction.
-    
-    Parameters:
-    ----------
-    pulses: array like 1d
-        Single signal to use as a reference
-    
-    referenceNumber: int, optional
-        if the reference is part of the input dataset, indicate its index in the list.
-    """
+        """
+        Compulsory before using method optimize.
+        Define a reference signal for delay and amplitude correction.
+        
+        Parameters:
+        ----------
+        pulses: array like 1d
+            Single signal to use as a reference
+        
+        referenceNumber: int, optional
+            if the reference is part of the input dataset, indicate its index in the list.
+        """
         self.ref = ReferenceData(referenceTrace)
         self.reference_number = referenceNumber
 
@@ -293,16 +293,16 @@ class Optimization():
         self.nsample = len(globalParameters.t)
     
     def setTimeAxis(self, t):
-    """
-    Compulsory before using method optimize.
-    Define the time axis, assumed to be uniform and common for all measurement in the input dataset
-    
-    Parameters:
-    ----------
-    t: array like 1d
-        Uniformly sampled time value (in seconds)
-    
-    """
+        """
+        Compulsory before using method optimize.
+        Define the time axis, assumed to be uniform and common for all measurement in the input dataset
+        
+        Parameters:
+        ----------
+        t: array like 1d
+            Uniformly sampled time value (in seconds)
+        
+        """
         f = np.fft.rfftfreq(len(t), t[1]-t[0])
         w = f*2*np.pi
         self.globalparameters = globalparameters(t,f,w)
@@ -310,29 +310,29 @@ class Optimization():
         self.nsample = len(t)
         
     def setParameters(self, fitDelay = False, delayLimit = 1e-12, fitAmplitude = False, amplitudeLimit = 0.1, fitPeriodicSampling = False, periodicSamplingFreqLimit = 7e12, maxIter = 1000, maxIterPS = 1000):
-    """
-    Compulsory before using method optimize.
-    Define which correction to apply, and the parameters upper bounds
-    
-    Parameters:
-    ----------
-    fitDelay: bool, optional
-        if True, delay will be corrected (default is False)
-    delayLimit: float, optional
-        Define an upper bound for the delay in absolute value, in seconds (default is 1e-12)
-    fitAmplitude: bool, optional
-        if True, amplitude will be corrected (default is False)
-    amplitudeLimit: float, optional
-        Define an upper bound for the amplitude error in absolute value,  (default is 0.1)
-    fitPeriodicSampling: bool, optional
-        if True, periodic samplig error will be corrected (default is False)
-    delayLimit: float, optional
-        Define an upper bound for the central frequency of the perdiodic sampling error (default is 7e12)   
-    maxIter: int, optional
-        Maximum number of iteration for the optimisation of delay and amplitude (default is 1000)
-    maxIterPS: int, optional
-        Maximum number of iteration for the optimisation of periodic sampling (default is 1000)
-    """
+        """
+        Compulsory before using method optimize.
+        Define which correction to apply, and the parameters upper bounds
+        
+        Parameters:
+        ----------
+        fitDelay: bool, optional
+            if True, delay will be corrected (default is False)
+        delayLimit: float, optional
+            Define an upper bound for the delay in absolute value, in seconds (default is 1e-12)
+        fitAmplitude: bool, optional
+            if True, amplitude will be corrected (default is False)
+        amplitudeLimit: float, optional
+            Define an upper bound for the amplitude error in absolute value,  (default is 0.1)
+        fitPeriodicSampling: bool, optional
+            if True, periodic samplig error will be corrected (default is False)
+        delayLimit: float, optional
+            Define an upper bound for the central frequency of the perdiodic sampling error (default is 7e12)   
+        maxIter: int, optional
+            Maximum number of iteration for the optimisation of delay and amplitude (default is 1000)
+        maxIterPS: int, optional
+            Maximum number of iteration for the optimisation of periodic sampling (default is 1000)
+        """
         self.fit_dilatation = False
         self.dilatation_limit = np.zeros(2)
         self.dilatationmax_guess = np.zeros(2)
@@ -351,25 +351,25 @@ class Optimization():
         self.algo = algo
         
     def getCorrectedTraces(self):
-    """
-    After optimisation, returns the list of corrected signals
-    
-    Returns
-    -------
-    list of 1d array:
-        List of corrected time signal.
-    """
+        """
+        After optimisation, returns the list of corrected signals
+        
+        Returns
+        -------
+        list of 1d array:
+            List of corrected time signal.
+        """
         return self.datacorrection.pulse
     
     def getCorrectionParameters(self):
-    """
-    After optimisation, returns a dictionary with correction parameters applied
-    
-    Returns
-    -------
-    2 channel dictionary:
-        Channel "amplitude" and "delay" each contains the list of corection applied to each signal.
-    """
+        """
+        After optimisation, returns a dictionary with correction parameters applied
+        
+        Returns
+        -------
+        2 channel dictionary:
+            Channel "amplitude" and "delay" each contains the list of corection applied to each signal.
+        """
         resultDict = {}
         resultDict["delay"] = np.zeros(len(self.result))
         resultDict["amplitude"] = np.zeros(len(self.result))
@@ -439,9 +439,9 @@ class Optimization():
     # =============================================================================
         
     def optimize(self,nb_proc = 1):
-    """
-    Use this method after initiaization to launch the optimisation process.
-    """
+        """
+        Use this method after initiaization to launch the optimisation process.
+        """
     
         # =============================================================================
         # We load the model choices
