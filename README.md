@@ -62,6 +62,8 @@ This allows you to run the application without installing Python or any dependen
 2. Double-click `flamingo.exe` to launch the application
 3. Use the graphical interface to process your THz-TDS data
 
+**Note:** Please scroll down to Usage/Example data to see how you can make your first steps with flamingo.
+
 ![GUI Screenshot](images/screenshot_01.png)
 
 ### Using pip
@@ -122,6 +124,24 @@ flamingo/
 
 Flamingo provides three different interfaces for flexibility:
 
+### Graphical User Interface
+
+```bash
+# Launch the GUI
+flamingo-gui
+```
+
+![screenshot_02.PNG](images/screenshot_02.png)
+
+![screenshot_03.PNG](images/screenshot_03.png)
+
+The GUI provides an intuitive interface with:
+- File selection
+- Processing parameter configuration
+- Interactive visualizations
+- Optimization parameter adjustment
+- Export functionality for corrected data
+
 ### Python API
 
 ```python
@@ -181,23 +201,6 @@ flamingo --input data.h5 --no-dilatation --no-periodic
 flamingo --input data.h5 --export corrected_data.h5
 ```
 
-### Graphical User Interface
-
-```bash
-# Launch the GUI
-flamingo-gui
-```
-
-![screenshot_02.PNG](images/screenshot_02.PNG)
-
-![screenshot_03.PNG](images/screenshot_03.PNG)
-
-The GUI provides an intuitive interface with:
-- File selection
-- Processing parameter configuration
-- Interactive visualizations
-- Optimization parameter adjustment
-- Export functionality for corrected data
 
 ## Data Format
 
