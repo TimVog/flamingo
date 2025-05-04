@@ -49,6 +49,21 @@ flamingo is a comprehensive toolset for analyzing and correcting THz time-domain
 
 ## Installation
 
+### Executable Version
+
+For users without a Python background, a standalone executable version is available:
+## Download
+- [Latest Release](https://github.com/TimVog/flamingo/releases/latest) - View release notes and all available files
+- [Windows Executable](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-v0.1.0-win64.zip) - Direct download for Windows users
+ 
+This allows you to run the application without installing Python or any dependencies.
+
+1. Unpack the `.zip`-file
+2. Double-click `flamingo.exe` to launch the application
+3. Use the graphical interface to process your THz-TDS data
+
+![GUI Screenshot](images/screenshot_01.png)
+
 ### Using pip
 
 ```bash
@@ -67,15 +82,6 @@ cd flamingo
 pip install -e .
 ```
 
-### Executable Version
-
-For users without a Python background, a standalone executable version is available in the `dist` folder. This allows you to run the application without installing Python or any dependencies.
-
-1. Download the executable from the `dist` folder
-2. Double-click `flamingo.exe` to launch the application
-3. Use the graphical interface to process your THz-TDS data
-
-![GUI Screenshot](images/screenshot_01.png)
 
 ## Project Structure
 
