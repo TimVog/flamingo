@@ -1,0 +1,3 @@
+[console_scripts]
+flamingo = flamingo.main:main
+flamingo-gui = flamingo.gui:main

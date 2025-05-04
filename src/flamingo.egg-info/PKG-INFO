@@ -1,0 +1,127 @@
+Metadata-Version: 2.4
+Name: flamingo
+Version: 0.1.0
+Summary: Data Correction Tool for THz Time Domain Spectroscopy
+Author-email: Tim Vogel <32876663+TimVog@users.noreply.github.com>
+License: GPL-3.0-or-later
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: h5py
+Requires-Dist: tqdm
+Requires-Dist: colorama
+Requires-Dist: customtkinter>=5.1.2
+
+# THz Data Analysis Tool
+
+This project is a fork from the program [Correct-TDS](https://github.com/THzbiophotonics/Correct-TDS) from the group of [Romain Peretti](https://www.tuscany-erc.fr/).
+
+It is based on the algorithms from the paper:
+
+> E. Denakpo, T. Hannotte, N. Osseiran, F. Orieux and R. Peretti,
+> 
+> "Signal Estimation and Uncertainties Extraction in Terahertz Time-Domain Spectroscopy,"
+> 
+> in *IEEE Transactions on Instrumentation and Measurement, vol. 74, pp. 1-13, 2025, Art no. 6005413,*
+> 
+> doi: [10.1109/TIM.2025.3554287]()
+
+This project provides tools for analyzing and processing Terahertz time domain (THz-TDS) data, specifically correcting systematic errors to reduce the standard deviation of the dataset.
+
+The highlight of this implementation, besides streamlined code and thorough commenting, which hopefully give easy access, 
+is the read-in of one trace at a time, which makes the program highly optimized regarding a low memory usage. 
+Even large datasets with 10 000 traces and more can be processed by a weak computer.
+
+## Overview
+
+The toolset includes functions for:
+- Processing raw THz data from HDF-5 (.h5) files
+- Correcting for various systematic effects in TDS measurements
+- Analyzing time and frequency domain data
+- Generating visualization plots of the results
+
+## Core Components
+
+### Main Processing Module
+- `tims_correct_tds_v3_lowRAM.py`: Main processing module for THz data correction and analysis
+  - Handles data loading and preprocessing
+  - Implements correction algorithms
+  - Manages memory-efficient processing of large datasets
+
+### Supporting Modules
+- `plot_data.py`: Visualization functions for time and frequency domain data
+- `error_fit_functions.py`: Functions for error analysis and fitting
+- `helper_functions.py`: Utility functions for data manipulation and processing
+- `optimization_parameter.py`: Parameter optimization routines
+- `config.py`: Configuration settings and parameters
+
+## Usage
+
+Just run `tims_correct_tds_v3_lowRAM.py`
+
+### Data Processing
+```python
+import tims_correct_tds_v3_lowRAM as tds
+
+# Process data with custom parameters
+data, correction_parameter, trace_time, freq = tds.process_data(
+    filepath='path/to/your/data.h5',
+    trace_start=0,
+    trace_end=1000,
+    lowcut=0.18e12  # Low cut frequency in Hz
+)
+```
+
+### Visualization
+```python
+import plot_data as pd
+
+# Generate plots of the processed data
+pd.plot_correction_parameters(correction_parameter)
+pd.plot_time_freq_data(data, trace_time, freq)
+```
+
+## Data Format
+
+The tool expects H5 files containing THz time-domain spectroscopy data. The data should be structured with:
+- Time trace `timeaxis`
+- Various amounts of amplitude time traces, all based on the same time axis and with the same number of samples,
+sorted after "0", "1", ...
+
+## Parameters
+
+### Processing Parameters
+- `trace_start`: Starting index for data processing
+- `trace_end`: Ending index for data processing
+- `lowcut`: Low cut frequency for filtering (in Hz)
+
+### Correction Parameters
+The tool calculates and applies corrections for:
+- Delay
+- Dilatation
+- Residual noise
+- Periodic error ("Ghost" spectrum suppression)
+
+## Dependencies
+
+- NumPy
+- SciPy
+- Matplotlib
+- h5py
+- time
+- tqdm
+
+## Notes
+
+- The tool is optimized for memory efficiency when processing large datasets
+- All processing is performed locally
+- Results include both time and frequency domain analysis

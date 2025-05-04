@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flamingo"
+version = "0.1.0"
+description = "Data Correction Tool for THz Time Domain Spectroscopy"
+authors = [
+    { name = "Tim Vogel", email = "32876663+TimVog@users.noreply.github.com" },
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "h5py",
+    "tqdm",
+    "colorama",
+    "customtkinter>=5.1.2",
+]
+
+[project.scripts]
+flamingo = "flamingo.main:main"
+flamingo-gui = "flamingo.gui:main"
