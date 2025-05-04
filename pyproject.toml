@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flamingo-thz"
-version = "0.1.0"
+version = "0.1.1"
 description = "Data Correction Tool for THz Time Domain Spectroscopy"
 authors = [
     { name = "Tim Vogel", email = "32876663+TimVog@users.noreply.github.com" },
