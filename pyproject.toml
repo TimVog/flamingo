@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=42", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "flamingo"
+name = "flamingo-thz"
 version = "0.1.0"
 description = "Data Correction Tool for THz Time Domain Spectroscopy"
 authors = [
@@ -18,7 +18,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
 license = {text = "MIT"}
 dependencies = [
@@ -30,6 +30,8 @@ dependencies = [
     "colorama",
     "customtkinter>=5.1.2",
 ]
+homepage = "https://github.com/TimVog/flamingo"
+repository = "https://github.com/TimVog/flamingo"
 
 [project.scripts]
 flamingo = "flamingo.main:main"
