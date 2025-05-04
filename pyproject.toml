@@ -15,12 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
 dependencies = [
     "numpy",
     "scipy",
@@ -30,8 +29,10 @@ dependencies = [
     "colorama",
     "customtkinter>=5.1.2",
 ]
-homepage = "https://github.com/TimVog/flamingo"
-repository = "https://github.com/TimVog/flamingo"
+
+[project.urls]
+Homepage = "https://github.com/TimVog/flamingo"
+Repository = "https://github.com/TimVog/flamingo"
 
 [project.scripts]
 flamingo = "flamingo.main:main"
