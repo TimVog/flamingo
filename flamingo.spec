@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['src\\flamingo\\gui.py'],
+    ['src\\flamingo\\gui\\app.py'],
     pathex=[],
     binaries=[],
     datas=[],

@@ -12,13 +12,14 @@ from flamingo.utils.progress import smartrange
 class ProcessingPipeline:
     """Manages the sequence of THz data processing steps."""
 
-    def __init__(self, correction_config):
+    def __init__(self, correction_config, silent=False):
         """
         Initialize pipeline with configuration.
 
         Parameters:
         correction_config (CorrectionConfig): Parameter configuration object
         """
+        self.silent = silent
         self.config = correction_config
         self.data = None
         self.trace_time = None
@@ -133,9 +134,12 @@ class ProcessingPipeline:
     def _calculate_mean_std(self, input_file, trace_start, trace_end):
         """Calculate mean and standard deviation for raw and filtered data."""
         number_of_traces = len(range(trace_start, trace_end))
+        if self.silent:
+            trace_iterator = range(trace_start, trace_end)
+        else:
+            trace_iterator = smartrange(trace_start, trace_end, desc="Step 1/5: Statistics")
 
-        for count, i in enumerate(smartrange(trace_start, trace_end,
-                                             desc="Step 1/5: Statistics")):
+        for count, i in enumerate(trace_iterator):
             # Read raw data
             trace_data = np.array(input_file[str(i)])
 
@@ -166,9 +170,12 @@ class ProcessingPipeline:
         min_distance = np.inf
         self.reference_trace = None
         reference_idx = None
+        if self.silent:
+            trace_iterator = range(trace_start, trace_end)
+        else:
+            trace_iterator = smartrange(trace_start, trace_end, desc="Step 2/5: Reference trace")
 
-        for i in smartrange(trace_start, trace_end,
-                            desc="Step 2/5: Reference trace"):
+        for i in trace_iterator:
             # Process trace
             trace_data = np.array(input_file[str(i)])
             trace_filtered = sosfiltfilt(self.filter_coefficients, trace_data, padtype=None)
@@ -257,10 +264,13 @@ class ProcessingPipeline:
         # Determine correct data dictionary keys based on enabled corrections
         delay_key = "corrected (delay_dilatation)" if self.config.enabled_corrections["dilatation"] else "corrected (delay)"
         periodic_key = "corrected (+periodic)" if self.config.enabled_corrections["dilatation"] else "corrected (delay+periodic)"
+        if self.silent:
+            trace_iterator = range(trace_start, trace_end)
+        else:
+            trace_iterator = smartrange(trace_start, trace_end, desc="Step 5/5: Applying corrections")
 
         # Process each trace with clear progress description
-        for count, i in enumerate(smartrange(trace_start, trace_end,
-                                             desc="Step 5/5: Applying corrections")):
+        for count, i in enumerate(trace_iterator):
             try:
                 # Process trace data
                 trace_data = np.array(input_file[str(i)])
