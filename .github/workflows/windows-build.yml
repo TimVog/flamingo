@@ -1,0 +1,44 @@
+name: Build Windows GUI
+
+on:
+  release:
+    types: [published]  # attaches the zip to the release
+  workflow_dispatch:    # manual test build (zip as workflow artifact)
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    permissions:
+      contents: write  # upload release assets
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Install package and PyInstaller
+      run: |
+        python -m pip install --upgrade pip
+        pip install . pyinstaller
+
+    - name: Build executable
+      run: pyinstaller flamingo.spec --noconfirm
+
+    - name: Zip executable
+      run: Compress-Archive -Path dist/flamingo.exe -DestinationPath "dist/flamingo-${{ github.event.release.tag_name || github.ref_name }}-win64.zip"
+
+    - name: Attach zip to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/flamingo-*-win64.zip
+
+    - name: Upload zip as artifact (manual run)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: flamingo-win64
+        path: dist/flamingo-*-win64.zip
