@@ -38,7 +38,7 @@ jobs:
 
     - name: Upload zip as artifact (manual run)
       if: github.event_name == 'workflow_dispatch'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: flamingo-win64
         path: dist/flamingo-*-win64.zip
