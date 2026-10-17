@@ -21,7 +21,7 @@ The scientific foundation remains the excellent work described in:
 > 
 > in *IEEE Transactions on Instrumentation and Measurement, vol. 74, pp. 1-13, 2025, Art no. 6005413,*
 > 
-> doi: [10.1109/TIM.2025.3554287]()
+> doi: [10.1109/TIM.2025.3554287](https://doi.org/10.1109/TIM.2025.3554287)
 
 ## What does flamingo do?
 
@@ -272,9 +272,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Credits
 
 - Original [Correct-TDS](https://github.com/THzbiophotonics/Correct-TDS) implementation by [Romain Peretti's group](https://www.tuscany-erc.fr/)
-- Algorithms based on the paper by E. Denakpo et al. (2025)
-- Package development by Tim Vogel
-- GUI development and object-oriented architecture support by Claude 3.7 Sonnet, which provided assistance in restructuring the codebase from linear scripts to a modular, object-oriented package with a modern graphical interface
+- Algorithms based on the paper by [E. Denakpo et al. (2025)](https://doi.org/10.1109/TIM.2025.3554287)
+- Package development by [Tim Vogel](https://orcid.org/0000-0002-0539-4331)
 
 ## License
 
