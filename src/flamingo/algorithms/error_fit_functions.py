@@ -3,7 +3,7 @@ import scipy.optimize as optimize
 
 from flamingo.utils.config import logger
 
-def fit_periodic_sampling(optimization_dict, trace_time, trace_mean, freq, dt):
+def fit_periodic_sampling(optimization_dict, trace_time, trace_mean, freq, dt, rng=None):
     """
     Fit a periodic sampling model to a given time-domain signal using the differential evolution optimization algorithm.
 
@@ -13,6 +13,7 @@ def fit_periodic_sampling(optimization_dict, trace_time, trace_mean, freq, dt):
     trace_mean (numpy.ndarray): The mean of the time-domain signal.
     freq (numpy.ndarray): The frequency array of the trace.
     dt (float): The time step.
+    rng (int or numpy.random.Generator, optional): Seed for differential evolution, None is not repeatable.
 
     Returns:
     xopt (numpy.ndarray): The optimal parameters for the periodic sampling model (length: 3).
@@ -29,7 +30,8 @@ def fit_periodic_sampling(optimization_dict, trace_time, trace_mean, freq, dt):
                                           args=(trace_time, trace_mean, dt, freq_limit_idx, min_values, max_values),
                                           maxiter=optimization_dict["max_iteration"],
                                           popsize=optimization_dict["popsize"],
-                                          bounds=list(zip(lower_bounds, upper_bounds)))
+                                          bounds=list(zip(lower_bounds, upper_bounds)),
+                                          rng=rng)
     xopt = res.x * (max_values - min_values) + min_values
 
     # Log the fitted periodic parameters in a readable format
@@ -70,7 +72,7 @@ def error_periodic_sampling(x, trace_time, trace_mean, dt, freq_limit_idx, min_v
     error = np.sum(np.abs(np.fft.rfft(corrected)[freq_limit_idx:]))
     return error
 
-def initialize_delay_dilatation(optimization_parameter, trace_fft, freq, trace_time, trace_ref, dt):
+def initialize_delay_dilatation(optimization_parameter, trace_fft, freq, trace_time, trace_ref, dt, rng=None):
     # Load values from dictionary
     min_values = optimization_parameter["min_values"]
     max_values = optimization_parameter["max_values"]
@@ -87,7 +89,8 @@ def initialize_delay_dilatation(optimization_parameter, trace_fft, freq, trace_t
                                           bounds=list(zip(lower_bounds, upper_bounds)),
                                           args=(freq, trace_time, trace_fft, trace_ref, min_values, max_values, dt, param_order),
                                           maxiter=optimization_parameter["max_iteration"],
-                                          disp=False)  # Disable progress output
+                                          disp=False,  # Disable progress output
+                                          rng=rng)
 
     optimization_parameter["x0"] = res.x
     optimization_parameter["param_order"] = param_order

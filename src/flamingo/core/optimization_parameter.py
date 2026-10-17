@@ -1,5 +1,9 @@
 import numpy as np
 
+# Default seed for differential evolution: "THZ" as ASCII codes (84 72 90)
+DEFAULT_SEED = 847290
+
+
 class CorrectionConfig:
     """Manages all correction parameters and optimization settings."""
 
@@ -43,7 +47,8 @@ class CorrectionConfig:
         # Optimization settings
         self.optimization_settings = {
             "max_iteration": 5000,
-            "algorithm": "SLSQP"
+            "algorithm": "SLSQP",
+            "seed": DEFAULT_SEED  # None gives non-repeatable results
         }
 
         # Results storage
@@ -121,6 +126,13 @@ class CorrectionConfig:
 
             if 'algorithm' in opt_config and opt_config['algorithm'] in ['SLSQP', 'L-BFGS-B', 'TNC']:
                 self.optimization_settings['algorithm'] = opt_config['algorithm']
+
+            if 'seed' in opt_config:
+                try:
+                    seed = opt_config['seed']
+                    self.optimization_settings['seed'] = None if seed is None else int(seed)
+                except (ValueError, TypeError):
+                    pass
 
     def get_enabled_parameters(self):
         """Returns parameter bounds for only enabled corrections."""

@@ -8,6 +8,7 @@ from flamingo.utils import config
 from flamingo.algorithms import error_fit_functions as ef
 from flamingo.algorithms import correction_methods as cm
 from flamingo.utils.progress import smartrange
+from flamingo.core.optimization_parameter import DEFAULT_SEED
 
 class ProcessingPipeline:
     """Manages the sequence of THz data processing steps."""
@@ -193,6 +194,10 @@ class ProcessingPipeline:
 
         config.logger.info(f"Found reference trace with id {reference_idx}")
 
+    def _seed(self):
+        """Seed for differential evolution; each call starts a fresh generator so results are repeatable."""
+        return self.config.optimization_settings.get("seed", DEFAULT_SEED)
+
     def _fit_periodic_sampling(self):
         """Fit periodic sampling error to mean trace."""
         # Use periodic_sampling parameters from config
@@ -201,7 +206,8 @@ class ProcessingPipeline:
             self.trace_time,
             self.data["filtered_windowed"]["time"]["mean"],
             self.freq,
-            self.dt
+            self.dt,
+            rng=self._seed()
         )
 
         # Store parameters for later application
@@ -248,7 +254,8 @@ class ProcessingPipeline:
             self.freq,
             self.trace_time,
             self.reference_trace,
-            self.dt
+            self.dt,
+            rng=self._seed()
         )
 
         # Store initial parameters

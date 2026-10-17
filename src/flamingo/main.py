@@ -1,7 +1,7 @@
 """Entry point for Flamingo THz data analysis tool."""
 
 import h5py
-from flamingo.core.optimization_parameter import CorrectionConfig
+from flamingo.core.optimization_parameter import CorrectionConfig, DEFAULT_SEED
 from flamingo.core.processing_pipeline import ProcessingPipeline
 from flamingo.utils.config import logger
 
@@ -26,7 +26,7 @@ def _get_trace_count(filepath):
         return 1000  # Default fallback
 
 
-def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, config_options=None):
+def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, config_options=None, seed=DEFAULT_SEED):
     """
     Process THz data with configurable correction options.
 
@@ -45,6 +45,9 @@ def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, conf
         Low frequency cutoff in Hz (default: 0.2e12)
     config_options : dict, optional
         Configuration overrides
+    seed : int or None, optional
+        Seed for the differential evolution fits (default: DEFAULT_SEED). Identical input and seed
+        give bit-identical results; None gives a different result on every run.
 
     Returns:
     --------
@@ -66,6 +69,7 @@ def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, conf
 
     # Create configuration with optional overrides
     correction_config = CorrectionConfig()
+    correction_config.optimization_settings["seed"] = seed
 
     if config_options:
         if "enable_dilatation" in config_options:

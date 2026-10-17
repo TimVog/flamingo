@@ -262,7 +262,8 @@ class FlamingoGUI(ctk.CTk):
 
                 # Update optimization settings
                 if 'optimization_settings' in opt_params:
-                    correction_config.optimization_settings = opt_params['optimization_settings']
+                    # Merge, so settings the panel does not show (e.g. the seed) keep their defaults
+                    correction_config.optimization_settings.update(opt_params['optimization_settings'])
 
                 logger.info("Applied custom optimization parameters")
 

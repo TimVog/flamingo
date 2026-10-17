@@ -2,7 +2,7 @@
 
 import argparse
 
-from flamingo.core.optimization_parameter import CorrectionConfig
+from flamingo.core.optimization_parameter import CorrectionConfig, DEFAULT_SEED
 from flamingo.core.processing_pipeline import ProcessingPipeline
 
 
@@ -22,6 +22,7 @@ def parse_arguments():
     parser.add_argument("--lowcut", type=float, default=0.2e12, help="Low cut frequency (Hz)")
     parser.add_argument("--no-dilatation", action="store_true", help="Disable dilatation correction")
     parser.add_argument("--no-periodic", action="store_true", help="Disable periodic correction")
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Seed for the differential evolution fits")
 
     # Add export option
     parser.add_argument("--export", "-e", help="Path for saving corrected data as HDF5 file")
@@ -40,6 +41,7 @@ def run_cli():
     config = CorrectionConfig()
     config.enabled_corrections["dilatation"] = not args.no_dilatation
     config.enabled_corrections["periodic"] = not args.no_periodic
+    config.optimization_settings["seed"] = args.seed
 
     # Process data
     pipeline = ProcessingPipeline(config)
