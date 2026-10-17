@@ -83,8 +83,9 @@ def calculate_mean_std(trace, count, process_step, domain, data):
     """
     delta = trace - data[process_step][domain]["mean"]
     data[process_step][domain]["mean"] = data[process_step][domain]["mean"] + delta / (count + 1)
-    data[process_step][domain]["std"] = data[process_step][domain]["std"] + delta * (
-            trace - data[process_step][domain]["mean"])
+    # conj() makes this the variance E|x - mean|^2 for complex spectra (no-op for real traces)
+    data[process_step][domain]["std"] = data[process_step][domain]["std"] + np.real(delta * np.conj(
+            trace - data[process_step][domain]["mean"]))
     return data
 
 
