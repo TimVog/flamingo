@@ -38,6 +38,8 @@ class FlamingoGUI(ctk.CTk):
         self.processing_complete = False
         self.processing_in_progress = False
         self.results = None
+        self.pipeline = None  # Pipeline of the last successful run, reused for export
+        self.processed_params = None
 
         # Create GUI layout
         self.create_layout()
@@ -277,6 +279,8 @@ class FlamingoGUI(ctk.CTk):
                 params['trace_end'],
                 params['lowcut']
             )
+            self.pipeline = pipeline
+            self.processed_params = params
 
             # Update UI after processing is complete
             self.after(100, self.processing_complete_callback)
@@ -305,7 +309,8 @@ class FlamingoGUI(ctk.CTk):
             logger.warning("Export attempted without processed data")
             return
 
-        params = control_panel.get_parameters()
+        # Export exactly what was processed, even if the panel was edited since
+        params = self.processed_params
 
         # Get export file path
         export_path = filedialog.asksaveasfilename(
@@ -319,13 +324,8 @@ class FlamingoGUI(ctk.CTk):
             return
 
         try:
-            # Create configuration with user settings
-            correction_config = CorrectionConfig()
-            correction_config.enabled_corrections["dilatation"] = params['enable_dilatation']
-            correction_config.enabled_corrections["periodic"] = params['enable_periodic']
-
-            # Create processing pipeline
-            pipeline = ProcessingPipeline(correction_config)
+            # Reuse the processing pipeline, it holds the fitted correction parameters
+            pipeline = self.pipeline
 
             # Set up progress tracking
             control_panel.set_status("Exporting data...")

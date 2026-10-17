@@ -77,6 +77,9 @@ class ProcessingPipeline:
 
     def _initialize(self, input_file, trace_start, trace_end, lowcut):
         """Initialize data structures and preprocessing elements."""
+        # Remember the filter setting, export_corrected_data reuses it
+        self.lowcut = lowcut
+
         # Read time axis
         self.trace_time = np.array(input_file["timeaxis"]) * 1e-12
 
@@ -374,8 +377,32 @@ class ProcessingPipeline:
             process_step=process_steps
         )
 
-    def export_corrected_data(self, input_filepath, output_filepath, trace_start, trace_end):
-        """Export corrected data to a new HDF5 file."""
+    def export_corrected_data(self, input_filepath, output_filepath, trace_start, trace_end, lowcut=None):
+        """
+        Export corrected data to a new HDF5 file.
+
+        Applies the same corrections as process_file: filter and window, delay/dilatation/residual noise
+        and, if enabled, the periodic sampling correction. Needs the fitted parameters in
+        self.config.results, i.e. process_file must have run (or results must be set by hand).
+
+        Parameters:
+        lowcut (float, optional): Low cut frequency in Hz. Defaults to the value used by process_file,
+            or 0.2e12 if process_file has not run on this pipeline.
+        """
+        results = self.config.results
+        number_of_traces = len(range(trace_start, trace_end))
+        if "residual_noise" not in results:
+            raise ValueError("No correction parameters found, run process_file before exporting")
+        if number_of_traces > len(results["residual_noise"]):
+            raise ValueError(f"Export range ({number_of_traces} traces) is larger than the processed range "
+                             f"({len(results['residual_noise'])} traces)")
+        apply_periodic = self.config.enabled_corrections["periodic"]
+        if apply_periodic and "periodic_params" not in results:
+            raise ValueError("Periodic correction is enabled, but no periodic parameters were fitted")
+
+        if lowcut is None:
+            lowcut = getattr(self, "lowcut", None) or 0.2e12
+
         config.logger.info(f"Exporting corrected data to {output_filepath}...")
 
         # Open input and output files
@@ -388,41 +415,33 @@ class ProcessingPipeline:
             dt = np.mean(np.diff(trace_time))
 
             # Ensure all required parameters are initialized
-            if not hasattr(self, 'trace_time') or self.trace_time is None:
+            if self.trace_time is None:
                 self.trace_time = trace_time
-
-            if not hasattr(self, 'dt') or self.dt is None:
+            if self.dt is None:
                 self.dt = dt
-
-            if not hasattr(self, 'freq') or self.freq is None:
-                # Calculate frequency axis based on time data
+            if self.freq is None:
                 self.freq = np.fft.rfftfreq(len(trace_time), dt)
 
-            # Recalculate filter coefficients
+            # Recalculate filter coefficients and window, identical to process_file
             self.filter_coefficients = hf.get_filter_coefficients(
-                fs=1/dt, lowcut=0.2e12, highcut=None, order=5)
-
-            # Create window function
+                fs=1/dt, lowcut=lowcut, highcut=None, order=5)
             self.window = get_window(("tukey", 0.05), len(trace_time), fftbins=False)
 
-            # Process each trace with robust parameter handling
-            for i in smartrange(trace_start, trace_end, desc="Exporting traces"):
+            if self.silent:
+                trace_iterator = range(trace_start, trace_end)
+            else:
+                trace_iterator = smartrange(trace_start, trace_end, desc="Exporting traces")
+
+            for idx, i in enumerate(trace_iterator):
                 try:
-                    # Read and process trace data...
                     trace_data = np.array(input_file[str(i)])
                     trace_filtered = sosfiltfilt(self.filter_coefficients, trace_data, padtype=None)
                     trace_windowed = trace_filtered * self.window
                     trace_windowed_fft = np.fft.rfft(trace_windowed)
 
-                    # Safe parameter access with defaults
-                    idx = i - trace_start
-                    correction_params = {
-                        "delay": self.config.results.get("delay", [0])[idx] if idx < len(self.config.results.get("delay", [])) else 0,
-                        "dilatation": self.config.results.get("dilatation", [0])[idx] if idx < len(self.config.results.get("dilatation", [])) else 0,
-                        "residual_noise": self.config.results.get("residual_noise", [0])[idx] if idx < len(self.config.results.get("residual_noise", [])) else 0
-                    }
+                    correction_params = {param: results[param][idx]
+                                         for param in self.config.parameter_order if param in results}
 
-                    # Apply corrections with safety checks
                     corrected_trace = cm.apply_delay_dilatation_correction(
                         trace_windowed_fft,
                         self.trace_time,
@@ -432,7 +451,10 @@ class ProcessingPipeline:
                         self.config.enabled_corrections
                     )
 
-                    # Save corrected trace
+                    if apply_periodic:
+                        corrected_trace = cm.apply_periodic_correction(
+                            corrected_trace, self.trace_time, self.dt, results["periodic_params"])
+
                     output_file.create_dataset(str(i), data=corrected_trace)
 
                 except Exception as e:

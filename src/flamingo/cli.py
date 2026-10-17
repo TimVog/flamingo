@@ -51,7 +51,7 @@ def run_cli():
 
     # Export data if requested
     if args.export:
-        pipeline.export_corrected_data(filepath, args.export, args.start, args.end)
+        pipeline.export_corrected_data(filepath, args.export, args.start, args.end, args.lowcut)
 
     # Generate visualizations
     from flamingo.visualization import plot_data as pd
