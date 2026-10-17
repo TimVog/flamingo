@@ -32,7 +32,7 @@ The software features:
 - **Small footprint** - Minimal dependencies and optimized code for simpler installation and deployment
 - **Efficient processing** - Single-trace processing approach that preserves memory even with very large datasets
 - **Multiple interfaces** - Python API, command-line tool, and graphical user interface to suit different workflows
-- **Standalone executable** - Available as an .exe file for users without Python programming experience
+- **Standalone executable** - Available for Windows, macOS (Apple Silicon) and Linux for users without Python programming experience
 
 ## Overview
 
@@ -51,16 +51,17 @@ flamingo is a comprehensive toolset for analyzing and correcting THz time-domain
 
 ### Executable Version
 
-For users without a Python background, a standalone executable version is available:
-## Download
-- [Latest Release](https://github.com/TimVog/flamingo/releases/latest) - View release notes and all available files
-- [Windows Executable](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-win64.zip) - Direct download for Windows users
- 
-This allows you to run the application without installing Python or any dependencies.
+For users without a Python background, a standalone executable version is available. It runs without installing
+Python or any dependencies.
 
-1. Unpack the `.zip`-file
-2. Double-click `flamingo.exe` to launch the application
-3. Use the graphical interface to process your THz-TDS data
+- [Latest Release](https://github.com/TimVog/flamingo/releases/latest) - View release notes and all available files
+- [Windows](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-win64.zip) - unpack the `.zip` and double-click `flamingo.exe`
+- [macOS, Apple Silicon](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-macos-arm64.zip) - unpack the `.zip` and open `flamingo.app`
+- [Linux, x86-64](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-linux-x86_64.tar.gz) - unpack with `tar -xzf` and run `./flamingo`
+
+The executables are not signed. On macOS the first start is blocked ("cannot be opened"): open
+*System Settings → Privacy & Security* and click *Open Anyway*, or run `xattr -dr com.apple.quarantine flamingo.app`.
+On Windows, SmartScreen may ask for confirmation (*More info → Run anyway*).
 
 **Note:** Please scroll down to Usage/Example data to see how you can make your first steps with flamingo.
 
