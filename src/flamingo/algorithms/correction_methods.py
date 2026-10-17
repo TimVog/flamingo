@@ -1,6 +1,6 @@
 import numpy as np
 
-def apply_delay_correction(trace_fft, freq, delay):
+def apply_delay_correction(trace_fft, freq, delay, n=None):
     """
     Apply delay correction in frequency domain.
 
@@ -8,12 +8,13 @@ def apply_delay_correction(trace_fft, freq, delay):
     trace_fft (numpy.ndarray): The FFT of the trace
     freq (numpy.ndarray): Frequency array
     delay (float): Delay parameter in seconds
+    n (int, optional): Number of time samples. Needed for odd lengths, which rfft cannot encode.
 
     Returns:
     numpy.ndarray: Time-domain signal with delay correction applied
     """
     z = np.exp(1j * 2 * np.pi * freq * delay)
-    return np.fft.irfft(z * trace_fft)
+    return np.fft.irfft(z * trace_fft, n=n)
 
 def apply_dilatation_correction(trace, trace_time, dt, dilatation):
     """
@@ -89,9 +90,9 @@ def apply_delay_dilatation_correction(trace_fft, trace_time, freq, dt, params, e
     """
     # Use dictionary access instead of positional access
     if enabled_corrections["delay"] and "delay" in params:
-        trace_corrected = apply_delay_correction(trace_fft, freq, params["delay"])
+        trace_corrected = apply_delay_correction(trace_fft, freq, params["delay"], n=len(trace_time))
     else:
-        trace_corrected = np.fft.irfft(trace_fft)
+        trace_corrected = np.fft.irfft(trace_fft, n=len(trace_time))
 
     if enabled_corrections["dilatation"] and "dilatation" in params:
         trace_corrected = apply_dilatation_correction(

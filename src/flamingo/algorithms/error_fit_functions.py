@@ -185,9 +185,9 @@ def apply_delay_dilatation(x, freq, trace_time, trace_fft, dt, param_order=None)
     # Apply delay in frequency domain (if parameter exists)
     if "delay" in params:
         z = np.exp(1j * 2 * np.pi * freq * params["delay"])
-        trace_delayed = np.fft.irfft(z * trace_fft)
+        trace_delayed = np.fft.irfft(z * trace_fft, n=len(trace_time))
     else:
-        trace_delayed = np.fft.irfft(trace_fft)
+        trace_delayed = np.fft.irfft(trace_fft, n=len(trace_time))
 
     # Apply dilatation correction (if parameter exists)
     if "dilatation" in params:
