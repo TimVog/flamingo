@@ -102,8 +102,7 @@ def normalize_std(number_of_traces, data, process_step=None, domain=None):
     """
     if process_step is None:
         process_step = data.keys()
-    if domain is None:
-        domain_list = ["time", "freq"]
+    domain_list = ["time", "freq"] if domain is None else domain
     for key in process_step:
         for domain in domain_list:
             data[key][domain]["std"] = np.sqrt(data[key][domain]["std"] / number_of_traces)

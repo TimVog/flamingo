@@ -29,6 +29,7 @@ class ProcessingPipeline:
         self.window = None
         self.dt = None
         self.reference_trace = None
+        self.failed_traces = []  # Trace indices whose correction failed in step 5
 
         # Store current correction configuration for change detection
         self.previous_config = {k: v for k, v in self.config.enabled_corrections.items()}
@@ -280,6 +281,8 @@ class ProcessingPipeline:
             trace_iterator = smartrange(trace_start, trace_end, desc="Step 5/5: Applying corrections")
 
         # Process each trace with clear progress description
+        self.failed_traces = []
+        number_ok = 0
         for count, i in enumerate(trace_iterator):
             try:
                 # Process trace data
@@ -324,47 +327,31 @@ class ProcessingPipeline:
                     self.config.enabled_corrections
                 )
 
-                # Calculate statistics for corrected trace (delay+dilatation)
-                self.data = hf.calculate_mean_std(
-                    trace_corrected,
-                    count,
-                    delay_key,
-                    "time",
-                    self.data
-                )
-                trace_corrected_fft = np.fft.rfft(trace_corrected)
-                self.data = hf.calculate_mean_std(
-                    trace_corrected_fft,
-                    count,
-                    delay_key,
-                    "freq",
-                    self.data
-                )
-
                 # Apply periodic correction if enabled
                 if self.config.enabled_corrections["periodic"]:
                     trace_periodic = trace_corrected - np.gradient(trace_corrected, self.dt) * self.periodic_correction_term
-
-                    # Calculate statistics for periodic correction
-                    self.data = hf.calculate_mean_std(
-                        trace_periodic,
-                        count,
-                        periodic_key,
-                        "time",
-                        self.data
-                    )
-                    trace_periodic_fft = np.fft.rfft(trace_periodic)
-                    self.data = hf.calculate_mean_std(
-                        trace_periodic_fft,
-                        count,
-                        periodic_key,
-                        "freq",
-                        self.data
-                    )
             except Exception as e:
                 config.logger.error(f"Error processing trace {i}: {str(e)}")
-                # Continue with next trace instead of stopping the entire processing
+                # Mark the trace as failed, so it enters neither the statistics nor the export
+                for param in param_order:
+                    self.config.results[param][count] = np.nan
+                self.config.results["metrics"]["f_opt"][count] = np.nan
+                self.failed_traces.append(i)
                 continue
+
+            # Statistics only over successfully corrected traces (Welford index = number of traces so far)
+            self.data = hf.calculate_mean_std(trace_corrected, number_ok, delay_key, "time", self.data)
+            self.data = hf.calculate_mean_std(np.fft.rfft(trace_corrected), number_ok, delay_key, "freq", self.data)
+            if self.config.enabled_corrections["periodic"]:
+                self.data = hf.calculate_mean_std(trace_periodic, number_ok, periodic_key, "time", self.data)
+                self.data = hf.calculate_mean_std(np.fft.rfft(trace_periodic), number_ok, periodic_key, "freq", self.data)
+            number_ok += 1
+
+        if number_ok == 0:
+            raise RuntimeError("Correction failed for all traces, see the log for the errors")
+        if self.failed_traces:
+            config.logger.warning(f"Correction failed for {len(self.failed_traces)} trace(s), excluded from "
+                                  f"statistics and export: {self.failed_traces}")
 
         # Normalize statistics for corrected data
         process_steps = [delay_key]
@@ -372,7 +359,7 @@ class ProcessingPipeline:
             process_steps.append(periodic_key)
 
         self.data = hf.normalize_std(
-            len(range(trace_start, trace_end)),
+            number_ok,
             self.data,
             process_step=process_steps
         )
@@ -441,6 +428,9 @@ class ProcessingPipeline:
 
                     correction_params = {param: results[param][idx]
                                          for param in self.config.parameter_order if param in results}
+                    if np.isnan(list(correction_params.values())).any():
+                        config.logger.warning(f"Skipping trace {i}, its correction failed during processing")
+                        continue
 
                     corrected_trace = cm.apply_delay_dilatation_correction(
                         trace_windowed_fft,
