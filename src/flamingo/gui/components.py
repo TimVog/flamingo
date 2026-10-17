@@ -6,6 +6,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import numpy as np
 
 from flamingo.utils.config import logger
+from flamingo.core.optimization_parameter import CorrectionConfig
+
+def _format(value):
+    """Shortest text that converts back to exactly the same float (e.g. 6e+12, 1e-13, -1)."""
+    if value != 0 and (abs(value) >= 1e4 or abs(value) < 1e-3):
+        return np.format_float_scientific(value, unique=True, trim="-")
+    return np.format_float_positional(value, unique=True, trim="-")
+
 
 class OptimizationPanel:
     """Panel for configuring optimization parameters and bounds."""
@@ -32,29 +40,13 @@ class OptimizationPanel:
 
     def initialize_variables(self):
         """Initialize variables for all optimization parameters."""
-        # Correction bounds
-        self.delay_min = tk.StringVar(value="-1e-11")
-        self.delay_max = tk.StringVar(value="1e-11")
-        self.dilatation_min = tk.StringVar(value="-1e-2")
-        self.dilatation_max = tk.StringVar(value="1e-2")
-        self.residual_noise_min = tk.StringVar(value="-0.1")
-        self.residual_noise_max = tk.StringVar(value="0.1")
-
-        # Periodic sampling parameters
-        self.frequency_limit = tk.StringVar(value="auto")
-        self.max_iteration_periodic = tk.StringVar(value="4000")
-        self.popsize = tk.StringVar(value="16")
-        self.amplitude_min = tk.StringVar(value="0")
-        self.amplitude_max = tk.StringVar(value="1e-13")
-        # Use Hz values directly
-        self.frequency_min = tk.StringVar(value="6.0e12")
-        self.frequency_max = tk.StringVar(value="12.0e12")
-        self.phase_min = tk.StringVar(value=str(-3.14159))
-        self.phase_max = tk.StringVar(value=str(3.14159))
-
-        # Optimization settings
-        self.max_iteration = tk.StringVar(value="5000")
-        self.algorithm = tk.StringVar(value="SLSQP")
+        names = ["delay_min", "delay_max", "dilatation_min", "dilatation_max",
+                 "residual_noise_min", "residual_noise_max", "frequency_limit", "max_iteration_periodic",
+                 "popsize", "amplitude_min", "amplitude_max", "frequency_min", "frequency_max",
+                 "phase_min", "phase_max", "max_iteration", "algorithm"]
+        for name in names:
+            setattr(self, name, tk.StringVar())
+        self.reset_to_defaults()
 
     def _setup_ui(self):
         """Create and arrange UI elements for optimization parameters."""
@@ -109,7 +101,8 @@ class OptimizationPanel:
         row = self._add_min_max_field("Amplitude", self.amplitude_min, self.amplitude_max, row, tooltip="Amplitude bounds for periodic sampling")
 
         # Phase bounds
-        row = self._add_min_max_field("Phase (rad)", self.phase_min, self.phase_max, row, tooltip="Phase bounds for periodic sampling in radians")
+        row = self._add_min_max_field_with_suffix("Phase", self.phase_min, self.phase_max, "× π", row,
+                                                  tooltip="Phase bounds for periodic sampling in units of π")
 
         # --- Optimization Settings Section ---
         self._add_section_header("Optimization Settings", row)
@@ -245,30 +238,34 @@ class OptimizationPanel:
         return validate_callback
 
     def reset_to_defaults(self):
-        """Reset all parameters to default values."""
-        # Reset correction bounds
-        self.delay_min.set("-1e-11")
-        self.delay_max.set("1e-11")
-        self.dilatation_min.set("-1e-2")
-        self.dilatation_max.set("1e-2")
-        self.residual_noise_min.set("-0.1")
-        self.residual_noise_max.set("0.1")
+        """Reset all parameters to the library defaults (CorrectionConfig), so GUI and API give identical results."""
+        defaults = CorrectionConfig()
+        bounds = defaults.bounds
+        periodic = defaults.periodic_sampling
 
-        # Reset periodic sampling parameters
-        self.frequency_limit.set("auto")
-        self.max_iteration_periodic.set("4000")
-        self.popsize.set("16")
-        self.amplitude_min.set("0")
-        self.amplitude_max.set("1e-13")
-        # Reset frequencies in Hz
-        self.frequency_min.set("6.0e12")
-        self.frequency_max.set("12.0e12")
-        self.phase_min.set(str(-3.14159))
-        self.phase_max.set(str(3.14159))
+        # _format keeps full float precision, so the GUI reproduces the library defaults exactly
+        self.delay_min.set(_format(bounds["delay"]["min"]))
+        self.delay_max.set(_format(bounds["delay"]["max"]))
+        self.dilatation_min.set(_format(bounds["dilatation"]["min"]))
+        self.dilatation_max.set(_format(bounds["dilatation"]["max"]))
+        self.residual_noise_min.set(_format(bounds["residual_noise"]["min"]))
+        self.residual_noise_max.set(_format(bounds["residual_noise"]["max"]))
 
-        # Reset optimization settings
-        self.max_iteration.set("5000")
-        self.algorithm.set("SLSQP")
+        limit = periodic["frequency_limit"]
+        self.frequency_limit.set("auto" if limit is None else _format(limit))
+        self.max_iteration_periodic.set(str(periodic["max_iteration"]))
+        self.popsize.set(str(periodic["popsize"]))
+        self.amplitude_min.set(_format(periodic["min_values"]["amplitude"]))
+        self.amplitude_max.set(_format(periodic["max_values"]["amplitude"]))
+        # Shown in Hz, the configuration stores angular frequency
+        self.frequency_min.set(_format(periodic["min_values"]["frequency"] / (2 * np.pi)))
+        self.frequency_max.set(_format(periodic["max_values"]["frequency"] / (2 * np.pi)))
+        # Shown in units of π
+        self.phase_min.set(_format(periodic["min_values"]["phase"] / np.pi))
+        self.phase_max.set(_format(periodic["max_values"]["phase"] / np.pi))
+
+        self.max_iteration.set(str(defaults.optimization_settings["max_iteration"]))
+        self.algorithm.set(defaults.optimization_settings["algorithm"])
 
     def _parse_frequency_limit(self):
         """'auto' or empty gives None (auto-detection), otherwise a frequency in Hz."""
@@ -306,12 +303,12 @@ class OptimizationPanel:
                     "min_values": {
                         "amplitude": float(self.amplitude_min.get()),
                         "frequency": freq_min,  # Multiply by 2π
-                        "phase": float(self.phase_min.get())
+                        "phase": float(self.phase_min.get()) * np.pi
                     },
                     "max_values": {
                         "amplitude": float(self.amplitude_max.get()),
                         "frequency": freq_max,  # Multiply by 2π
-                        "phase": float(self.phase_max.get())
+                        "phase": float(self.phase_max.get()) * np.pi
                     }
                 },
                 # Optimization settings
