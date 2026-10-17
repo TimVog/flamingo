@@ -1,3 +1,4 @@
+import h5py
 import numpy as np
 from scipy.signal import butter
 from matplotlib.ticker import EngFormatter
@@ -124,3 +125,17 @@ def find_reference_trace(trace_mean_normed, trace_windowed):
     """
     distance = 1 - np.dot(trace_windowed, trace_mean_normed)
     return distance
+
+
+def get_trace_count(filepath):
+    """
+    Count the traces (datasets with numeric keys "0", "1", ...) in a flamingo HDF5 file.
+
+    Raises:
+    ValueError: If the file contains no traces.
+    """
+    with h5py.File(filepath, "r") as f:
+        number_of_traces = sum(key.isdigit() for key in f.keys())
+    if number_of_traces == 0:
+        raise ValueError(f"No traces (numeric keys) found in {filepath}")
+    return number_of_traces

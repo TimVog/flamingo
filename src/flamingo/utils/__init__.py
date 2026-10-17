@@ -13,7 +13,8 @@ from flamingo.utils.helper_functions import (
     get_filter_coefficients,
     calculate_mean_std,
     normalize_std,
-    find_reference_trace
+    find_reference_trace,
+    get_trace_count
 )
 
 from flamingo.utils.log_capture import (

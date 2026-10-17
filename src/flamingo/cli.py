@@ -5,6 +5,7 @@ import argparse
 from flamingo.core.optimization_parameter import CorrectionConfig, DEFAULT_SEED
 from flamingo.core.processing_pipeline import ProcessingPipeline
 from flamingo.utils.config import setup_console_logging
+from flamingo.utils.helper_functions import get_trace_count
 
 
 def parse_arguments():
@@ -12,12 +13,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="THz-TDS Data Correction Tool")
 
     # File selection
-    parser.add_argument("--input", "-i", help="Path to input HDF5 file")
+    parser.add_argument("--input", "-i", required=True, help="Path to input HDF5 file")
     parser.add_argument("--output", "-o", help="Path for saving results (optional)")
 
     # Processing range
     parser.add_argument("--start", type=int, default=0, help="Starting trace index")
-    parser.add_argument("--end", type=int, default=1000, help="Ending trace index")
+    parser.add_argument("--end", type=int, default=None, help="Ending trace index (default: all traces)")
 
     # Processing options
     parser.add_argument("--lowcut", type=float, default=0.2e12, help="Low cut frequency (Hz)")
@@ -36,8 +37,9 @@ def run_cli():
     args = parse_arguments()
     setup_console_logging()
 
-    # Use provided file or default
-    filepath = args.input if args.input else r"C:\Users\Tim\Downloads\04-12-2023_0mb_50k_100ps.h5"
+    filepath = args.input
+    if args.end is None:
+        args.end = get_trace_count(filepath)
 
     # Configure correction options
     config = CorrectionConfig()

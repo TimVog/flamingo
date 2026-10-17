@@ -28,17 +28,17 @@ jobs:
       run: pyinstaller flamingo.spec --noconfirm
 
     - name: Zip executable
-      run: Compress-Archive -Path dist/flamingo.exe -DestinationPath "dist/flamingo-${{ github.event.release.tag_name || github.ref_name }}-win64.zip"
+      run: Compress-Archive -Path dist/flamingo.exe -DestinationPath dist/flamingo-win64.zip  # stable name for the README download link
 
     - name: Attach zip to release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/flamingo-*-win64.zip
+        files: dist/flamingo-win64.zip
 
     - name: Upload zip as artifact (manual run)
       if: github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v5
       with:
         name: flamingo-win64
-        path: dist/flamingo-*-win64.zip
+        path: dist/flamingo-win64.zip

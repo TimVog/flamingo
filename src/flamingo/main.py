@@ -1,29 +1,9 @@
 """Entry point for Flamingo THz data analysis tool."""
 
-import h5py
 from flamingo.core.optimization_parameter import CorrectionConfig, DEFAULT_SEED
 from flamingo.core.processing_pipeline import ProcessingPipeline
 from flamingo.utils.config import logger
-
-
-def _get_trace_count(filepath):
-    """
-    Determine the number of traces in an HDF5 file by counting numeric keys.
-
-    Parameters:
-    filepath (str): Path to HDF5 file
-
-    Returns:
-    int: Number of traces found in the file
-    """
-    try:
-        with h5py.File(filepath, "r") as f:
-            # Count the number of numeric keys in the file (traces)
-            trace_keys = [key for key in f.keys() if key.isdigit()]
-            return len(trace_keys)
-    except Exception as e:
-        logger.error(f"Error reading trace count from {filepath}: {e}")
-        return 1000  # Default fallback
+from flamingo.utils.helper_functions import get_trace_count
 
 
 def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, config_options=None, seed=DEFAULT_SEED):
@@ -60,7 +40,7 @@ def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, conf
         logger.info(f"Auto-detected trace_start: {trace_start}")
 
     if trace_end is None:
-        trace_end = _get_trace_count(filepath)
+        trace_end = get_trace_count(filepath)
         logger.info(f"Auto-detected trace_end: {trace_end} (total traces available)")
 
     # Validate the detected/provided range

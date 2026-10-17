@@ -54,7 +54,7 @@ flamingo is a comprehensive toolset for analyzing and correcting THz time-domain
 For users without a Python background, a standalone executable version is available:
 ## Download
 - [Latest Release](https://github.com/TimVog/flamingo/releases/latest) - View release notes and all available files
-- [Windows Executable](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-v0.1.0-win64.zip) - Direct download for Windows users
+- [Windows Executable](https://github.com/TimVog/flamingo/releases/latest/download/flamingo-win64.zip) - Direct download for Windows users
  
 This allows you to run the application without installing Python or any dependencies.
 
@@ -96,7 +96,6 @@ flamingo/
     └── flamingo/      # Main package
         ├── __init__.py
         ├── cli.py     # Command-line interface
-        ├── gui.py     # Graphical user interface
         ├── main.py    # Main API entry points
         ├── algorithms/    # Error correction algorithms
         │   ├── __init__.py
@@ -106,8 +105,9 @@ flamingo/
         │   ├── __init__.py
         │   ├── optimization_parameter.py
         │   └── processing_pipeline.py
-        ├── gui/           # GUI components
+        ├── gui/           # Graphical user interface
         │   ├── __init__.py
+        │   ├── app.py     # Main window and entry point
         │   └── components.py
         ├── utils/         # Utility functions
         │   ├── __init__.py
@@ -191,8 +191,8 @@ pipeline.export_corrected_data(
 ### Command-Line Interface
 
 ```bash
-# Basic usage
-flamingo --input data.h5 --output results/ --start 0 --end 1000 --lowcut 0.2e12
+# Basic usage (without --end all traces are processed)
+flamingo --input data.h5 --start 0 --end 1000 --lowcut 0.2e12
 
 # Disable specific corrections
 flamingo --input data.h5 --no-dilatation --no-periodic
@@ -201,6 +201,14 @@ flamingo --input data.h5 --no-dilatation --no-periodic
 flamingo --input data.h5 --export corrected_data.h5
 ```
 
+
+## Reproducibility
+
+The delay/dilatation initialisation and the periodic sampling fit use differential evolution, a stochastic
+optimizer. flamingo seeds it explicitly (default `847290`), so identical input gives bit-identical results with
+the API, the CLI and the GUI. Use `process_data(..., seed=...)`, `flamingo --seed ...` or
+`CorrectionConfig().optimization_settings["seed"]` to choose another seed; `seed=None` gives a different
+result on every run.
 
 ## Data Format
 

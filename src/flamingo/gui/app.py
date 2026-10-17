@@ -14,6 +14,7 @@ from flamingo.core.optimization_parameter import CorrectionConfig
 from flamingo.core.processing_pipeline import ProcessingPipeline
 from flamingo.utils.log_capture import HybridLogCapture
 from flamingo.utils.config import logger, setup_console_logging
+from flamingo.utils.helper_functions import get_trace_count
 
 # Import GUI components
 from flamingo.gui.components import ControlPanel, VisualizationPanel, OptimizationPanel
@@ -179,18 +180,9 @@ class FlamingoGUI(ctk.CTk):
     def update_trace_range_from_file(self, file_path, control_panel):
         """Update trace range based on selected file content."""
         try:
-            import h5py
-            with h5py.File(file_path, "r") as f:
-                # Count the number of numeric keys in the file (traces)
-                trace_keys = [key for key in f.keys() if key.isdigit()]
-                if trace_keys:
-                    max_trace = len(trace_keys)
-                    control_panel.set_trace_range(0, max_trace)
-                    logger.info(f"Detected {max_trace} traces in file, updated 'End Trace' accordingly.")
-                else:
-                    # Default if no traces found
-                    control_panel.set_trace_range(0, 1000)
-                    logger.warning("No traces detected in file, using default range")
+            max_trace = get_trace_count(file_path)
+            control_panel.set_trace_range(0, max_trace)
+            logger.info(f"Detected {max_trace} traces in file, updated 'End Trace' accordingly.")
         except Exception as e:
             logger.error(f"Error reading trace count: {e}")
             control_panel.set_trace_range(0, 1000)
