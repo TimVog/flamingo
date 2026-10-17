@@ -4,6 +4,7 @@ import argparse
 
 from flamingo.core.optimization_parameter import CorrectionConfig, DEFAULT_SEED
 from flamingo.core.processing_pipeline import ProcessingPipeline
+from flamingo.utils.config import setup_console_logging
 
 
 def parse_arguments():
@@ -33,6 +34,7 @@ def parse_arguments():
 def run_cli():
     """Execute the command-line workflow."""
     args = parse_arguments()
+    setup_console_logging()
 
     # Use provided file or default
     filepath = args.input if args.input else r"C:\Users\Tim\Downloads\04-12-2023_0mb_50k_100ps.h5"

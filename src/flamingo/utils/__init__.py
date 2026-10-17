@@ -2,6 +2,7 @@
 
 from flamingo.utils.config import (
     logger,
+    setup_console_logging,
     set_debug,
     get_debug,
     ColoredFormatter

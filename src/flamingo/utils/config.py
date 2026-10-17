@@ -1,11 +1,7 @@
 from colorama import Fore, Back, Style, just_fix_windows_console
-just_fix_windows_console()
 import sys
 import logging
 from typing import Optional, Dict
-# Important that colorama is initialized before import sys,
-# otherwise there is no color output in the Windows powershell
-# See https://stackoverflow.com/a/61069032
 
 
 class ColoredFormatter(logging.Formatter):
@@ -42,13 +38,23 @@ formatter = ColoredFormatter(
     }
 )
 
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(formatter)
-
-logger = logging.getLogger()
-logger.handlers[:] = []
-logger.addHandler(handler)
+# Package logger. Importing flamingo as a library leaves the logging setup of the calling program
+# alone: records propagate to the root logger, so warnings and errors still show up by default.
+logger = logging.getLogger("flamingo")
 logger.setLevel(logging.INFO)
+
+
+def setup_console_logging():
+    """Print colored flamingo log messages to stdout; used when flamingo runs as a program (CLI, GUI)."""
+    # Color support for the Windows console, see https://stackoverflow.com/a/61069032
+    just_fix_windows_console()
+    if not any(getattr(h, "_flamingo_console", False) for h in logger.handlers):
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(formatter)
+        handler._flamingo_console = True
+        logger.addHandler(handler)
+    # Avoid printing every message twice if the root logger has a handler as well
+    logger.propagate = False
 
 
 def set_debug(DEBUG=False):

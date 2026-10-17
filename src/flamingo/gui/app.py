@@ -13,7 +13,7 @@ import customtkinter as ctk
 from flamingo.core.optimization_parameter import CorrectionConfig
 from flamingo.core.processing_pipeline import ProcessingPipeline
 from flamingo.utils.log_capture import HybridLogCapture
-from flamingo.utils.config import logger
+from flamingo.utils.config import logger, setup_console_logging
 
 # Import GUI components
 from flamingo.gui.components import ControlPanel, VisualizationPanel, OptimizationPanel
@@ -358,6 +358,7 @@ class FlamingoGUI(ctk.CTk):
 
 def main():
     """Main entry point for the Flamingo GUI application."""
+    setup_console_logging()
     app = FlamingoGUI()
     app.mainloop()
 
