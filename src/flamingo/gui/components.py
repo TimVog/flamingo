@@ -343,7 +343,8 @@ class ControlPanel:
         self.enable_periodic = tk.BooleanVar(value=True)
 
         # Create frame
-        self.frame = ctk.CTkFrame(parent, width=200)
+        # Scrollable, so the buttons stay reachable when the window is not tall enough
+        self.frame = ctk.CTkScrollableFrame(parent, width=200)
         self.frame.grid_columnconfigure(0, weight=1)
 
         # Setup UI components
