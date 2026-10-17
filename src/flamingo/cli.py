@@ -24,6 +24,8 @@ def parse_arguments():
     parser.add_argument("--lowcut", type=float, default=0.2e12, help="Low cut frequency (Hz)")
     parser.add_argument("--no-dilatation", action="store_true", help="Disable dilatation correction")
     parser.add_argument("--no-periodic", action="store_true", help="Disable periodic correction")
+    parser.add_argument("--frequency-limit", type=float, default=None,
+                        help="Start of the periodic fit window in Hz (default: auto, noise floor of the mean spectrum)")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Seed for the differential evolution fits")
 
     # Add export option
@@ -46,6 +48,7 @@ def run_cli():
     config.enabled_corrections["dilatation"] = not args.no_dilatation
     config.enabled_corrections["periodic"] = not args.no_periodic
     config.optimization_settings["seed"] = args.seed
+    config.periodic_sampling["frequency_limit"] = args.frequency_limit
 
     # Process data
     pipeline = ProcessingPipeline(config)

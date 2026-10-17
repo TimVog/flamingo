@@ -86,6 +86,7 @@ class ProcessingPipeline:
 
         # Setup metadata
         number_of_traces = len(range(trace_start, trace_end))
+        self.number_of_traces = number_of_traces
         number_of_samples = len(self.trace_time)
         config.logger.info(f"Detected {number_of_traces} traces, each {number_of_samples} samples long.")
 
@@ -202,11 +203,36 @@ class ProcessingPipeline:
         """Seed for differential evolution; each call starts a fresh generator so results are repeatable."""
         return self.config.optimization_settings.get("seed", DEFAULT_SEED)
 
+    def _periodic_frequency_limit(self):
+        """Start of the fit window: the configured value, or the noise floor of the mean spectrum (auto)."""
+        settings = self.config.periodic_sampling
+        if settings["frequency_limit"] is not None:
+            config.logger.info(f"Frequency limit (set by user): {settings['frequency_limit'] * 1e-12:.2f} THz")
+            return settings["frequency_limit"]
+        stats = self.data["filtered_windowed"]["freq"]
+        frequency_limit = hf.find_noise_floor(self.freq, stats["mean"], stats["std"], self.number_of_traces,
+                                              settings["noise_floor_threshold"], settings["noise_floor_width"])
+        if frequency_limit is not None:
+            config.logger.info(f"Auto-detected frequency limit (noise floor): {frequency_limit * 1e-12:.2f} THz")
+        return frequency_limit
+
     def _fit_periodic_sampling(self):
         """Fit periodic sampling error to mean trace."""
-        # Use periodic_sampling parameters from config
+        frequency_limit = self._periodic_frequency_limit()
+        self.config.results["periodic_frequency_limit"] = frequency_limit
+
+        if frequency_limit is None or frequency_limit >= self.freq[-1]:
+            # No band without signal: nothing to fit, a fit could only add structure
+            config.logger.warning("No noise floor found below the Nyquist frequency, "
+                                  "periodic sampling correction skipped (amplitude 0)")
+            periodic_params = np.array([0.0, self.config.periodic_sampling["min_values"]["frequency"], 0.0])
+            self.config.results["periodic_params"] = periodic_params
+            self.periodic_correction_term = np.zeros_like(self.trace_time)
+            return
+
+        # Use periodic_sampling parameters from config, with the resolved window start
         periodic_params = ef.fit_periodic_sampling(
-            self.config.periodic_sampling,
+            {**self.config.periodic_sampling, "frequency_limit": frequency_limit},
             self.trace_time,
             self.data["filtered_windowed"]["time"]["mean"],
             self.freq,

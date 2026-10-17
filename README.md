@@ -235,6 +235,12 @@ Flamingo implements several correction methods to improve the quality of THz-TDS
 3. **Residual Noise Correction**: Reduces amplitude variations
 4. **Periodic Error Correction**: Suppresses "Ghost" spectra caused by periodic sampling errors
 
+The periodic error is fitted by minimizing the spectrum of the mean trace above a frequency limit. By default
+(`auto`) this limit is where the mean spectrum reaches its noise floor, so a ghost copy anywhere outside the
+signal band is penalized and data without a periodic error give an amplitude of about zero. A fixed limit can be
+set in the GUI, with `flamingo --frequency-limit 7.5e12` or `config_options={"frequency_limit": 7.5e12}`; the
+limit used is logged and stored in `results["periodic_frequency_limit"]`.
+
 ## Visualization
 
 The package includes comprehensive visualization tools:

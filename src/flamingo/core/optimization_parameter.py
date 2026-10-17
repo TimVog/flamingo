@@ -33,7 +33,11 @@ class CorrectionConfig:
 
         # Periodic sampling specific parameters
         self.periodic_sampling = {
-            "frequency_limit": 7.5e12,  # in Hz
+            # Start of the fit window in Hz; None: where the mean spectrum reaches its noise floor (auto)
+            "frequency_limit": None,
+            # Auto: |mean spectrum| must stay below threshold x noise of the mean over this bandwidth (Hz)
+            "noise_floor_threshold": 3,
+            "noise_floor_width": 0.2e12,
             "max_iteration": 4000,
             "popsize": 16,
             "min_values": {"amplitude": 0,
@@ -94,10 +98,12 @@ class CorrectionConfig:
             ps_config = config_dict['periodic_sampling']
 
             # Simple numeric parameters
-            for key in ['frequency_limit', 'max_iteration', 'popsize']:
+            for key in ['frequency_limit', 'noise_floor_threshold', 'noise_floor_width', 'max_iteration', 'popsize']:
                 if key in ps_config:
                     try:
-                        if key == 'frequency_limit':
+                        if key == 'frequency_limit' and ps_config[key] in (None, 'auto'):
+                            self.periodic_sampling[key] = None
+                        elif key in ('frequency_limit', 'noise_floor_threshold', 'noise_floor_width'):
                             self.periodic_sampling[key] = float(ps_config[key])
                         else:
                             self.periodic_sampling[key] = int(ps_config[key])

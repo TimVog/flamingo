@@ -140,3 +140,34 @@ def get_trace_count(filepath):
     if number_of_traces == 0:
         raise ValueError(f"No traces (numeric keys) found in {filepath}")
     return number_of_traces
+
+
+def find_noise_floor(freq, mean_spectrum, std_spectrum, number_of_traces, threshold=3, width=0.2e12):
+    """
+    Find the frequency where the mean spectrum ends in the noise floor.
+
+    Starting at the spectral peak, returns the first frequency from which |mean spectrum| stays below
+    threshold x (std / sqrt(number_of_traces)), the noise of the mean, over at least `width` Hz.
+
+    Parameters:
+    freq (numpy.ndarray): Frequency axis in Hz.
+    mean_spectrum (numpy.ndarray): Mean of the complex spectra.
+    std_spectrum (numpy.ndarray): Standard deviation of the complex spectra.
+    number_of_traces (int): Number of averaged traces.
+    threshold (float): Noise floor criterion in units of the noise of the mean.
+    width (float): Bandwidth in Hz over which the spectrum must stay below the criterion.
+
+    Returns:
+    float or None: Frequency in Hz, or None if the spectrum never stays in the noise floor.
+    """
+    amplitude = np.abs(mean_spectrum)
+    below = amplitude < threshold * np.abs(std_spectrum) / np.sqrt(number_of_traces)
+    run = max(1, int(np.ceil(width / (freq[1] - freq[0]))))
+    peak = np.argmax(amplitude)
+    if len(below) - peak < run:
+        return None
+    # Number of below-floor bins in each window of `run` bins, starting at every index from the peak on
+    in_floor = np.convolve(below[peak:].astype(int), np.ones(run, dtype=int), mode="valid") == run
+    if not in_floor.any():
+        return None
+    return float(freq[peak + np.argmax(in_floor)])

@@ -56,6 +56,9 @@ def process_data(filepath, trace_start=None, trace_end=None, lowcut=0.2e12, conf
             correction_config.enabled_corrections["dilatation"] = config_options["enable_dilatation"]
         if "enable_periodic" in config_options:
             correction_config.enabled_corrections["periodic"] = config_options["enable_periodic"]
+        if "frequency_limit" in config_options:
+            # Start of the periodic fit window in Hz, None: auto-detect from the noise floor
+            correction_config.periodic_sampling["frequency_limit"] = config_options["frequency_limit"]
 
     # Create processing pipeline
     pipeline = ProcessingPipeline(correction_config)

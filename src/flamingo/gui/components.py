@@ -41,7 +41,7 @@ class OptimizationPanel:
         self.residual_noise_max = tk.StringVar(value="0.1")
 
         # Periodic sampling parameters
-        self.frequency_limit = tk.StringVar(value="7.5e12")
+        self.frequency_limit = tk.StringVar(value="auto")
         self.max_iteration_periodic = tk.StringVar(value="4000")
         self.popsize = tk.StringVar(value="16")
         self.amplitude_min = tk.StringVar(value="0")
@@ -93,7 +93,13 @@ class OptimizationPanel:
         row = self._add_single_field("Population Size", self.popsize, row, tooltip="Population size for differential evolution algorithm")
 
         # Frequency limit
-        row = self._add_single_field("Frequency Limit (Hz)", self.frequency_limit, row, tooltip="Upper frequency limit for periodic error correction")
+        row = self._add_single_field("Frequency Limit (Hz)", self.frequency_limit, row,
+                                     tooltip="Start of the periodic fit window; 'auto' = noise floor of the mean spectrum")
+
+        # Shows the limit used in the last run (relevant for 'auto')
+        self.frequency_limit_info = ctk.CTkLabel(self.scrollable_frame, text="", font=ctk.CTkFont(size=11))
+        self.frequency_limit_info.grid(row=row, column=0, padx=10, pady=(0, 5), sticky="")
+        row += 1
 
         # Frequency bounds
         row = self._add_min_max_field_with_suffix("Frequency (Hz)", self.frequency_min, self.frequency_max, "× 2π", row,
@@ -249,7 +255,7 @@ class OptimizationPanel:
         self.residual_noise_max.set("0.1")
 
         # Reset periodic sampling parameters
-        self.frequency_limit.set("7.5e12")
+        self.frequency_limit.set("auto")
         self.max_iteration_periodic.set("4000")
         self.popsize.set("16")
         self.amplitude_min.set("0")
@@ -263,6 +269,19 @@ class OptimizationPanel:
         # Reset optimization settings
         self.max_iteration.set("5000")
         self.algorithm.set("SLSQP")
+
+    def _parse_frequency_limit(self):
+        """'auto' or empty gives None (auto-detection), otherwise a frequency in Hz."""
+        value = self.frequency_limit.get().strip()
+        return None if value.lower() in ("", "auto") else float(value)
+
+    def show_used_frequency_limit(self, frequency_limit):
+        """Show the frequency limit used by the last run, e.g. the auto-detected value."""
+        if frequency_limit is None:
+            text = "last run: no noise floor found, periodic correction skipped"
+        else:
+            text = f"last run: {frequency_limit:.3g} Hz ({frequency_limit * 1e-12:.2f} THz)"
+        self.frequency_limit_info.configure(text=text)
 
     def get_optimization_parameters(self):
         """Get all optimization parameters as a dictionary."""
@@ -281,7 +300,7 @@ class OptimizationPanel:
                 },
                 # Periodic sampling
                 "periodic_sampling": {
-                    "frequency_limit": float(self.frequency_limit.get()),
+                    "frequency_limit": self._parse_frequency_limit(),
                     "max_iteration": int(float(self.max_iteration_periodic.get())),
                     "popsize": int(float(self.popsize.get())),
                     "min_values": {

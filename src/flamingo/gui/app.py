@@ -252,7 +252,8 @@ class FlamingoGUI(ctk.CTk):
 
                 # Update periodic sampling parameters
                 if 'periodic_sampling' in opt_params:
-                    correction_config.periodic_sampling = opt_params['periodic_sampling']
+                    # Merge, so settings the panel does not show (e.g. the noise floor criterion) keep their defaults
+                    correction_config.periodic_sampling.update(opt_params['periodic_sampling'])
 
                 # Update optimization settings
                 if 'optimization_settings' in opt_params:
@@ -290,6 +291,12 @@ class FlamingoGUI(ctk.CTk):
         self.control_panel.set_status("Processing complete")
         self.control_panel.set_export_enabled(True)
         logger.info("Processing completed successfully")
+
+        # Show the frequency limit of the periodic fit (auto-detected unless set by the user)
+        correction_results = self.results[1]
+        if "periodic_frequency_limit" in correction_results:
+            self.visualization_panel.optimization_panel.show_used_frequency_limit(
+                correction_results["periodic_frequency_limit"])
 
         # Update visualizations
         self.update_visualizations()
