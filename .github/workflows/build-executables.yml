@@ -15,7 +15,7 @@ jobs:
             asset: flamingo-win64.zip
           - os: macos-latest  # Apple Silicon (arm64)
             asset: flamingo-macos-arm64.zip
-          - os: ubuntu-latest
+          - os: ubuntu-24.04  # pinned: the executable needs a glibc at least as new as the build host
             asset: flamingo-linux-x86_64.tar.gz
     runs-on: ${{ matrix.os }}
     permissions:
